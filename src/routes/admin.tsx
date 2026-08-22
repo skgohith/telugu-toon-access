@@ -69,7 +69,7 @@ export const Route = createFileRoute("/admin")({
 const CHART_COLORS = ["var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-5)"];
 
 function AdminPage() {
-  const { user, loading } = useAuth();
+  const { user, loading, signOut } = useAuth();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -110,10 +110,23 @@ function AdminPage() {
   return (
     <SiteLayout>
       <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6">
-        <p className="text-xs uppercase tracking-widest text-muted-foreground">Admin panel</p>
-        <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">
-          Manage <span className="text-gradient">Telugu-Toon-World</span>
-        </h1>
+        <div className="flex flex-wrap items-end justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-muted-foreground">Admin panel</p>
+            <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">
+              Manage <span className="text-gradient">Telugu-Toon-World</span>
+            </h1>
+          </div>
+          <Button
+            variant="glass"
+            onClick={async () => {
+              await signOut();
+              navigate({ to: "/auth", replace: true });
+            }}
+          >
+            <LogOut className="size-4" /> Logout
+          </Button>
+        </div>
 
         <Tabs defaultValue="overview" className="mt-8">
           <TabsList className="flex w-full flex-wrap justify-start">
