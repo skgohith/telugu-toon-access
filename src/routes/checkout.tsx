@@ -11,7 +11,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { inr } from "@/lib/format";
-import { createOrder, getPaymentDetails, listPlans, validateCoupon } from "@/lib/store.functions";
+import { createOrder, getPaymentDetails, validateCoupon } from "@/lib/store.functions";
+import { listPublicPlans } from "@/lib/plans.public";
 
 const searchSchema = z.object({ planId: z.string().optional() });
 
@@ -54,8 +55,8 @@ function CheckoutPage() {
   const { planId } = Route.useSearch();
   const navigate = useNavigate();
 
-  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
-  const { data: payment } = useQuery({ queryKey: ["payment-details"], queryFn: () => getPaymentDetails() });
+  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: listPublicPlans });
+  const { data: payment } = useQuery({ queryKey: ["payment-details"], queryFn: () => getPaymentDetails().catch(() => ({ upiId: "9848779490@fam" })) });
 
   const plan = useMemo(() => (plans ?? []).find((p) => p.id === planId) ?? null, [plans, planId]);
 
