@@ -29,7 +29,7 @@ export const Route = createFileRoute("/support")({
 const FAQS = [
   {
     q: "How long does payment verification take?",
-    a: "Our admin verifies UPI payments manually, usually within a few hours. Your dashboard updates automatically once approved.",
+    a: "Our admin verifies UPI payments manually, usually within a few hours. Your track-order page updates automatically once approved.",
   },
   {
     q: "Where do I find my UTR number?",
@@ -45,7 +45,7 @@ const FAQS = [
   },
   {
     q: "How do I open the Telegram channel?",
-    a: "After verification, sign in and press Join Telegram Channel on your dashboard. The invite is released only to approved members.",
+    a: "After verification, open the Track Order page with your reference and email, then press Join Telegram Channel. The invite is released only to approved orders.",
   },
 ];
 

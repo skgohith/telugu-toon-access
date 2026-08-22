@@ -5,7 +5,6 @@ import { motion } from "motion/react";
 
 import { SectionHeading, SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
-import { useAuth } from "@/hooks/useAuth";
 import { inr } from "@/lib/format";
 import { listPlans } from "@/lib/store.functions";
 import { cn } from "@/lib/utils";
@@ -28,14 +27,9 @@ export const Route = createFileRoute("/plans")({
 
 function PlansPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
   const { data: plans, isLoading } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
 
   function choose(planId: string) {
-    if (!user) {
-      navigate({ to: "/auth", search: { redirect: `/checkout?planId=${planId}` } });
-      return;
-    }
     navigate({ to: "/checkout", search: { planId } });
   }
 

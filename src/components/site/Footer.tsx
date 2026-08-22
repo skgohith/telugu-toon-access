@@ -32,8 +32,8 @@ export function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/dashboard" className="transition-colors hover:text-foreground">
-                Dashboard
+              <Link to="/payment-status" className="transition-colors hover:text-foreground">
+                Track Order
               </Link>
             </li>
           </ul>
