@@ -86,7 +86,7 @@ function SupportPage() {
           <Accordion
             type="single"
             collapsible
-            defaultValue={topic === "payment" ? "item-1" : topic === "faq" ? "item-0" : undefined}
+            defaultValue={topic === "payment" ? "item-1" : "item-0"}
             className="mt-4"
           >
             {FAQS.map((faq, index) => (
