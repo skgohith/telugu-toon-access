@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Loader2, ShieldCheck, TicketPercent } from "lucide-react";
+import { Copy, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -14,6 +14,13 @@ import { inr } from "@/lib/format";
 import { createOrder, getPaymentDetails, listPlans, validateCoupon } from "@/lib/store.functions";
 
 const searchSchema = z.object({ planId: z.string().optional() });
+
+const UPI_APPS = [
+  { label: "Google Pay", scheme: "tez://upi/pay?" },
+  { label: "PhonePe", scheme: "phonepe://pay?" },
+  { label: "Paytm", scheme: "paytmmp://pay?" },
+  { label: "Any UPI app", scheme: "upi://pay?" },
+] as const;
 
 export const Route = createFileRoute("/checkout")({
   validateSearch: (search) => searchSchema.parse(search),
