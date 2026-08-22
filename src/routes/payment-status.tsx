@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CheckCircle2, Clock, Loader2, Search, Send, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, ImageUp, Loader2, Search, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -9,6 +9,7 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { dateTime, inr } from "@/lib/format";
 import { getTelegramAccess, submitUtr, trackOrder } from "@/lib/store.functions";
 
@@ -40,6 +41,9 @@ function PaymentStatusPage() {
   const [lookup, setLookup] = useState({ ref: ref ?? "", email: email ?? "" });
   const [utr, setUtr] = useState("");
   const [link, setLink] = useState<string | null>(null);
+  const [proof, setProof] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [justSubmitted, setJustSubmitted] = useState(false);
 
   const enabled = Boolean(ref && email);
   const queryKey = ["track-order", ref, email];
@@ -52,13 +56,32 @@ function PaymentStatusPage() {
   });
 
   const utrMutation = useMutation({
-    mutationFn: () => submitUtr({ data: { orderRef: ref!, email: email!, utr } }),
+    mutationFn: async () => {
+      let proofPath: string | null = null;
+      if (proof) {
+        setUploading(true);
+        const ext = (proof.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+        const path = `${ref!.toUpperCase()}/${Date.now()}.${ext || "jpg"}`;
+        const { error } = await supabase.storage.from("payment-proofs").upload(path, proof, {
+          contentType: proof.type || "image/jpeg",
+          upsert: false,
+        });
+        setUploading(false);
+        if (error) throw new Error(`Could not upload the screenshot: ${error.message}`);
+        proofPath = path;
+      }
+      return submitUtr({ data: { orderRef: ref!, email: email!, utr, proofPath } });
+    },
     onSuccess: () => {
       toast.success("Reference submitted! The admin will verify shortly.");
-      setUtr("");
+      setJustSubmitted(true);
+      setProof(null);
       queryClient.invalidateQueries({ queryKey });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not submit reference"),
+    onError: (error) => {
+      setUploading(false);
+      toast.error(error instanceof Error ? error.message : "Could not submit reference");
+    },
   });
 
   const linkMutation = useMutation({
