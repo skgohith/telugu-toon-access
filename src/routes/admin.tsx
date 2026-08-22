@@ -7,6 +7,7 @@ import {
   Clock,
   ImageUp,
   Loader2,
+  LogOut,
   Search,
   ShieldCheck,
   Trash2,
