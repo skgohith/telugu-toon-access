@@ -5,6 +5,7 @@ import {
   BadgeIndianRupee,
   CheckCircle2,
   Clock,
+  ImageUp,
   Loader2,
   Search,
   ShieldCheck,
@@ -49,6 +50,7 @@ import {
   adminOrders,
   adminOverview,
   adminPlans,
+  adminProofUrl,
   adminSaveCoupon,
   adminSavePlan,
   adminSetOrderStatus,
@@ -287,6 +289,18 @@ function OrdersTab() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Update failed"),
   });
 
+  const proofMutation = useMutation({
+    mutationFn: (input: { orderId: string }) => adminProofUrl({ data: input }),
+    onSuccess: (result) => {
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      window.open(result.url, "_blank", "noopener,noreferrer");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not open the proof"),
+  });
+
   return (
     <div className="glass rounded-3xl p-6">
       <div className="flex flex-wrap items-center gap-3">
@@ -332,6 +346,17 @@ function OrdersTab() {
                     {order.coupon_code ? ` · coupon ${order.coupon_code}` : ""} · {dateTime(order.created_at)}
                   </p>
                   <p className="mt-1 text-xs font-semibold text-highlight">UTR: {order.utr ?? "not submitted"}</p>
+                  {order.proof_path && (
+                    <Button
+                      size="sm"
+                      variant="glass"
+                      className="mt-2"
+                      onClick={() => proofMutation.mutate({ orderId: order.id })}
+                      disabled={proofMutation.isPending}
+                    >
+                      <ImageUp /> View payment proof
+                    </Button>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold capitalize text-muted-foreground">{order.payment_status}</span>

@@ -97,6 +97,7 @@ export type Database = {
           payment_status: string
           plan_id: string
           plan_name: string
+          proof_path: string | null
           rejected_at: string | null
           telegram_access: boolean
           updated_at: string
@@ -120,6 +121,7 @@ export type Database = {
           payment_status?: string
           plan_id: string
           plan_name?: string
+          proof_path?: string | null
           rejected_at?: string | null
           telegram_access?: boolean
           updated_at?: string
@@ -143,6 +145,7 @@ export type Database = {
           payment_status?: string
           plan_id?: string
           plan_name?: string
+          proof_path?: string | null
           rejected_at?: string | null
           telegram_access?: boolean
           updated_at?: string

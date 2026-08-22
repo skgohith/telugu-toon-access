@@ -29,6 +29,7 @@ export type OrderRow = {
   discount_amount: number;
   final_amount: number;
   utr: string | null;
+  proof_path: string | null;
   payment_status: "pending" | "completed" | "rejected";
   telegram_access: boolean;
   approved_at: string | null;
@@ -37,7 +38,7 @@ export type OrderRow = {
 };
 
 const ORDER_COLUMNS =
-  "id, order_ref, plan_id, plan_name, coupon_code, customer_name, customer_email, customer_phone, original_amount, discount_amount, final_amount, utr, payment_status, telegram_access, approved_at, rejected_at, created_at";
+  "id, order_ref, plan_id, plan_name, coupon_code, customer_name, customer_email, customer_phone, original_amount, discount_amount, final_amount, utr, proof_path, payment_status, telegram_access, approved_at, rejected_at, created_at";
 
 function round2(value: number) {
   return Math.round(value * 100) / 100;
@@ -223,6 +224,13 @@ export const submitUtr = createServerFn({ method: "POST" })
           .min(6, "UTR must be at least 6 characters")
           .max(40)
           .regex(/^[A-Za-z0-9-]+$/, "UTR can contain only letters, numbers and dashes"),
+        proofPath: z
+          .string()
+          .trim()
+          .max(300)
+          .regex(/^[A-Za-z0-9._/-]+$/, "Invalid proof reference")
+          .optional()
+          .nullable(),
       })
       .parse(raw),
   )
@@ -243,7 +251,10 @@ export const submitUtr = createServerFn({ method: "POST" })
 
     const { data: order, error } = await supabaseAdmin
       .from("orders")
-      .update({ utr: data.utr.trim().toUpperCase() })
+      .update({
+        utr: data.utr.trim().toUpperCase(),
+        ...(data.proofPath ? { proof_path: data.proofPath } : {}),
+      })
       .eq("id", existing.id)
       .select(ORDER_COLUMNS)
       .single();
