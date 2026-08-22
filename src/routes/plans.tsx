@@ -46,6 +46,10 @@ function PlansPage() {
           <div className="mt-16 flex justify-center">
             <Loader2 className="size-6 animate-spin text-highlight" />
           </div>
+        ) : (plans ?? []).length === 0 ? (
+          <p className="mt-16 text-center text-sm text-muted-foreground">
+            Plans are being updated right now. Please check back in a moment.
+          </p>
         ) : (
           <div className="mt-14 grid gap-6 md:grid-cols-2">
             {(plans ?? []).map((plan, index) => (
