@@ -108,7 +108,7 @@ export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
         </div>
       </nav>
 
-      {open && (
+      {open && !onAdmin && (
         <div className="border-t border-border/60 bg-background/95 px-4 pb-4 pt-2 md:hidden">
           <div className="flex flex-col">
             {LINKS.map((link) => (
