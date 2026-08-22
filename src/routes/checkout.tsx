@@ -128,6 +128,16 @@ function CheckoutPage() {
     return `${scheme}${params.toString()}`;
   }
 
+  if (plansLoading) {
+    return (
+      <SiteLayout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="size-6 animate-spin text-highlight" />
+        </div>
+      </SiteLayout>
+    );
+  }
+
   if (!plan) {
     return (
       <SiteLayout>
