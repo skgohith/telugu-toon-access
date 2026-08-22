@@ -54,7 +54,7 @@ function CheckoutPage() {
   const { planId } = Route.useSearch();
   const navigate = useNavigate();
 
-  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
+  const { data: plans, isLoading: plansLoading } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
   const { data: payment } = useQuery({ queryKey: ["payment-details"], queryFn: () => getPaymentDetails() });
 
   const plan = useMemo(() => (plans ?? []).find((p) => p.id === planId) ?? null, [plans, planId]);
