@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { HeartHandshake, Palette, ShieldCheck, Users } from "lucide-react";
+import { HeartHandshake, Instagram, Palette, Send, ShieldCheck, Users } from "lucide-react";
 
 import { SectionHeading, SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
