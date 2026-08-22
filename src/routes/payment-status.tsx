@@ -154,7 +154,7 @@ function PaymentStatusPage() {
             <dl className="mt-8 grid gap-4 sm:grid-cols-2">
               <Row label="Plan" value={order.plan_name} />
               <Row label="Amount payable" value={inr(order.final_amount)} />
-              <Row label="Coupon" value={order.coupon_code ?? "—"} />
+              {order.coupon_code && <Row label="Coupon" value={order.coupon_code} />}
               <Row label="Created" value={dateTime(order.created_at)} />
               <Row label="Reference (UTR)" value={order.utr ?? "Not submitted"} />
               <Row label="Telegram access" value={order.telegram_access ? "Unlocked" : "Locked"} />
