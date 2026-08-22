@@ -328,18 +328,21 @@ function CheckoutPage() {
                   On mobile, tap an app to open it with the amount pre-filled. You will come back here to enter the UTR.
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {UPI_APPS.map((app) => (
-                    <Button
-                      key={app.label}
-                      type="button"
-                      variant="glass"
-                      className="justify-start"
-                      disabled={orderMutation.isPending}
-                      onClick={() => payWithApp(app.scheme)}
-                    >
-                      <Smartphone /> {app.label}
-                    </Button>
-                  ))}
+                  {UPI_APPS.map((app) => {
+                    const isOpening = openingApp === app.label && orderMutation.isPending;
+                    return (
+                      <Button
+                        key={app.label}
+                        type="button"
+                        variant="glass"
+                        className="justify-start"
+                        disabled={orderMutation.isPending}
+                        onClick={() => payWithApp(app.scheme, app.label)}
+                      >
+                        {isOpening ? <Loader2 className="animate-spin" /> : <Smartphone />} {app.label}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
 
