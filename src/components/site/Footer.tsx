@@ -1,5 +1,3 @@
-import { Link } from "@tanstack/react-router";
-
 import { Logo } from "@/components/site/Logo";
 
 export function Footer() {
