@@ -7,10 +7,6 @@ export function Footer() {
         <Logo />
         <p className="text-xs text-muted-foreground">© 2026 Telugu-Toon-World. All rights reserved.</p>
       </div>
-
-      <div className="border-t border-border/60 px-4 py-6 text-center text-xs text-muted-foreground sm:px-6">
-        © 2026 Telugu-Toon-World. All rights reserved.
-      </div>
     </footer>
   );
 }
