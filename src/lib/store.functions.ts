@@ -49,31 +49,9 @@ const lookupSchema = z.object({
   email: z.string().trim().email().max(160),
 });
 
-/**
- * Public read: uses the publishable key (not the service role) so the plans page
- * renders on any host, including deployments without server-only admin secrets.
- */
 export const listPlans = createServerFn({ method: "GET" }).handler(async (): Promise<PublicPlan[]> => {
-  const { createClient } = await import("@supabase/supabase-js");
-  const url = process.env["SUPABASE_URL"] ?? process.env["VITE_SUPABASE_URL"];
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? process.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
-  if (!url || !key) throw new Error("Supabase public environment variables are not configured.");
-
-  const supabasePublic = createClient(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-    global: {
-      fetch: (input, init) => {
-        const headers = new Headers(init?.headers);
-        if (key.startsWith("sb_") && headers.get("Authorization") === `Bearer ${key}`) {
-          headers.delete("Authorization");
-        }
-        headers.set("apikey", key);
-        return fetch(input, { ...init, headers });
-      },
-    },
-  });
-
-  const { data, error } = await supabasePublic
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+  const { data, error } = await supabaseAdmin
     .from("plans")
     .select("id, name, price, duration_days, duration_label, description, features, recommended, active, sort_order")
     .eq("active", true)
@@ -81,7 +59,6 @@ export const listPlans = createServerFn({ method: "GET" }).handler(async (): Pro
   if (error) throw new Error(error.message);
   return (data ?? []) as PublicPlan[];
 });
-
 
 export const validateCoupon = createServerFn({ method: "POST" })
   .inputValidator((raw) =>

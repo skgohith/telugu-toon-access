@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import { SectionHeading, SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { inr } from "@/lib/format";
-import { listPublicPlans } from "@/lib/plans.public";
+import { listPlans } from "@/lib/store.functions";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/plans")({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/plans")({
 
 function PlansPage() {
   const navigate = useNavigate();
-  const { data: plans, isLoading, error, refetch } = useQuery({ queryKey: ["plans"], queryFn: listPublicPlans });
+  const { data: plans, isLoading } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
 
   function choose(planId: string) {
     navigate({ to: "/checkout", search: { planId } });
@@ -46,18 +46,7 @@ function PlansPage() {
           <div className="mt-16 flex justify-center">
             <Loader2 className="size-6 animate-spin text-highlight" />
           </div>
-        ) : error || (plans ?? []).length === 0 ? (
-          <div className="glass mx-auto mt-14 max-w-xl rounded-3xl p-8 text-center">
-            <p className="font-display text-lg font-bold">Plans could not be loaded</p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              We couldn&apos;t reach the plan catalogue just now. Please try again in a moment.
-            </p>
-            <Button variant="hero" className="mt-6" onClick={() => refetch()}>
-              Try again
-            </Button>
-          </div>
         ) : (
-
           <div className="mt-14 grid gap-6 md:grid-cols-2">
             {(plans ?? []).map((plan, index) => (
               <motion.div
