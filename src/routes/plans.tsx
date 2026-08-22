@@ -27,7 +27,19 @@ export const Route = createFileRoute("/plans")({
 
 function PlansPage() {
   const navigate = useNavigate();
-  const { data: plans, isLoading } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
+  const {
+    data: plans,
+    isPending,
+    isError,
+    refetch,
+    isRefetching,
+  } = useQuery({
+    queryKey: ["plans"],
+    queryFn: () => listPlans(),
+    retry: 3,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    staleTime: 60_000,
+  });
 
   function choose(planId: string) {
     navigate({ to: "/checkout", search: { planId } });
@@ -42,15 +54,21 @@ function PlansPage() {
           subtitle="Pay securely via UPI, submit your reference number, and get Telegram access after admin verification."
         />
 
-        {isLoading ? (
+        {isPending || isRefetching ? (
           <div className="mt-16 flex justify-center">
             <Loader2 className="size-6 animate-spin text-highlight" />
           </div>
-        ) : (plans ?? []).length === 0 ? (
-          <p className="mt-16 text-center text-sm text-muted-foreground">
-            Plans are being updated right now. Please check back in a moment.
-          </p>
+        ) : isError || (plans ?? []).length === 0 ? (
+          <div className="glass mx-auto mt-16 max-w-md rounded-3xl p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              We couldn&apos;t load the plans just now. Please try again.
+            </p>
+            <Button variant="hero" className="mt-5" onClick={() => refetch()}>
+              Retry
+            </Button>
+          </div>
         ) : (
+
           <div className="mt-14 grid gap-6 md:grid-cols-2">
             {(plans ?? []).map((plan, index) => (
               <motion.div
