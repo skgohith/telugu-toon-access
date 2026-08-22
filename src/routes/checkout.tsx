@@ -64,6 +64,7 @@ function CheckoutPage() {
   const [coupon, setCoupon] = useState<CouponState | null>(null);
   const [qr, setQr] = useState<string | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
+  const [openingApp, setOpeningApp] = useState<string | null>(null);
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
@@ -107,15 +108,20 @@ function CheckoutPage() {
       const target = { to: "/payment-status" as const, search: { ref: order.order_ref, email: order.customer_email } };
       if (variables.appScheme) {
         const link = buildUpiLink(variables.appScheme, order.order_ref);
-        toast.success("Opening your UPI app — come back and enter the UTR after paying.");
-        window.location.href = link;
-        window.setTimeout(() => navigate(target), 1200);
+        toast.success(`Opening ${openingApp ?? "your UPI app"} — complete the payment and return here to enter the UTR.`);
+        // Use assign for a clean redirect; give the device a few seconds to hand off to the app
+        // before switching the browser tab to the UTR submission page.
+        window.location.assign(link);
+        window.setTimeout(() => navigate(target), 3000);
         return;
       }
       toast.success("Order created. Submit your payment reference next.");
       navigate(target);
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not create order"),
+    onError: (error) => {
+      setOpeningApp(null);
+      toast.error(error instanceof Error ? error.message : "Could not create order");
+    },
   });
 
   function buildUpiLink(scheme: string, note: string) {
@@ -158,8 +164,9 @@ function CheckoutPage() {
     orderMutation.mutate({});
   }
 
-  function payWithApp(scheme: string) {
+  function payWithApp(scheme: string, label: string) {
     if (!validDetails()) return;
+    setOpeningApp(label);
     orderMutation.mutate({ appScheme: scheme });
   }
 
@@ -321,18 +328,21 @@ function CheckoutPage() {
                   On mobile, tap an app to open it with the amount pre-filled. You will come back here to enter the UTR.
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
-                  {UPI_APPS.map((app) => (
-                    <Button
-                      key={app.label}
-                      type="button"
-                      variant="glass"
-                      className="justify-start"
-                      disabled={orderMutation.isPending}
-                      onClick={() => payWithApp(app.scheme)}
-                    >
-                      <Smartphone /> {app.label}
-                    </Button>
-                  ))}
+                  {UPI_APPS.map((app) => {
+                    const isOpening = openingApp === app.label && orderMutation.isPending;
+                    return (
+                      <Button
+                        key={app.label}
+                        type="button"
+                        variant="glass"
+                        className="justify-start"
+                        disabled={orderMutation.isPending}
+                        onClick={() => payWithApp(app.scheme, app.label)}
+                      >
+                        {isOpening ? <Loader2 className="animate-spin" /> : <Smartphone />} {app.label}
+                      </Button>
+                    );
+                  })}
                 </div>
               </div>
 
