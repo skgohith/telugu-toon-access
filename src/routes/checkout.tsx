@@ -63,6 +63,7 @@ function CheckoutPage() {
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<CouponState | null>(null);
   const [qr, setQr] = useState<string | null>(null);
+  const [hasPaid, setHasPaid] = useState(false);
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
