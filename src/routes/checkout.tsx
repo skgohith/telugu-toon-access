@@ -171,7 +171,7 @@ function CheckoutPage() {
           Complete your <span className="text-gradient">purchase</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Step 1 — pay via UPI. Step 2 — create your order and submit the payment reference (UTR).
+          Step 1 — pay via UPI. Step 2 — confirm you have paid. Step 3 — create your order and submit the UTR.
         </p>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
