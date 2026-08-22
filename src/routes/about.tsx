@@ -64,7 +64,36 @@ function AboutPage() {
           ))}
         </div>
 
-        <div className="mt-12 text-center">
+        <div className="glass mt-12 rounded-4xl p-8 text-center">
+          <h3 className="font-display text-xl font-bold">Connect with us</h3>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted-foreground">
+            Follow our main page for updates, sneak peeks, and new cartoon drops.
+          </p>
+          <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
+            <Button asChild variant="outline" size="lg" className="gap-2 rounded-full">
+              <a
+                href="https://www.instagram.com/telugu_toon_world?igsi=bWtjeTM3enNucGpq"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Instagram className="size-5" />
+                Instagram
+              </a>
+            </Button>
+            <Button asChild variant="outline" size="lg" className="gap-2 rounded-full">
+              <a
+                href="https://t.me/%2BuVSk3XrQ74ZmZGFl?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAb21jcAT2ippwZG9mAmV4dG4DYWVtAjExAHNydGMGYXBwX2lkDzU2NzA2NzM0MzM1MjQyNwABp9Hcl_JJiXvebhcgWc-281IMe4n_lyeWEM3ggedkWfYmaW654Wzd7eNheuQT_aem_hqmmzok1Wc67hcgZhMsNDQ"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                <Send className="size-5" />
+                Telegram
+              </a>
+            </Button>
+          </div>
+        </div>
+
+        <div className="mt-10 text-center">
           <Button asChild variant="hero" size="lg">
             <Link to="/plans">Join Telugu-Toon-World</Link>
           </Button>
