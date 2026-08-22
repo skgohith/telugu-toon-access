@@ -119,8 +119,6 @@ function AdminPage() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="coupons">Coupons</TabsTrigger>
-            <TabsTrigger value="plans">Plans</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
             <TabsTrigger value="data">Data</TabsTrigger>
           </TabsList>
 
@@ -132,12 +130,6 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="coupons" className="mt-6">
             <CouponsTab />
-          </TabsContent>
-          <TabsContent value="plans" className="mt-6">
-            <PlansTab />
-          </TabsContent>
-          <TabsContent value="customers" className="mt-6">
-            <CustomersTab />
           </TabsContent>
           <TabsContent value="data" className="mt-6">
             <DataTab />
