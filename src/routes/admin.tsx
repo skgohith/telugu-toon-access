@@ -458,7 +458,7 @@ function CouponsTab() {
               id="plan"
               value={form.planId}
               onChange={(e) => setForm({ ...form, planId: e.target.value })}
-              className="h-10 w-full rounded-full border border-input bg-transparent px-4 text-sm"
+              className="h-10 w-full rounded-full border border-input bg-card px-4 text-sm text-foreground"
               required
             >
               <option value="">Select a plan</option>
@@ -476,7 +476,7 @@ function CouponsTab() {
                 id="type"
                 value={form.discountType}
                 onChange={(e) => setForm({ ...form, discountType: e.target.value as "percent" | "fixed" })}
-                className="h-10 w-full rounded-full border border-input bg-transparent px-4 text-sm"
+                className="h-10 w-full rounded-full border border-input bg-card px-4 text-sm text-foreground"
               >
                 <option value="percent">Percent (%)</option>
                 <option value="fixed">Fixed (₹)</option>
@@ -810,7 +810,7 @@ function DataTab() {
             id="scope"
             value={scope}
             onChange={(e) => setScope(e.target.value as typeof scope)}
-            className="h-10 w-full rounded-full border border-input bg-transparent px-4 text-sm"
+            className="h-10 w-full rounded-full border border-input bg-card px-4 text-sm text-foreground"
           >
             {SCOPES.map((option) => (
               <option key={option.value} value={option.value}>
