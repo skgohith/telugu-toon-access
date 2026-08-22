@@ -44,7 +44,7 @@ function AboutPage() {
           </p>
           <p>
             Members choose a premium plan, pay securely through UPI, and submit their payment reference. Once our admin
-            verifies the payment, the private channel invite unlocks straight from your dashboard.
+            verifies the payment, the private channel invite unlocks on your track-order page — no account needed.
           </p>
           <p>
             We keep the community private on purpose — it protects the experience for paying members and lets us support
