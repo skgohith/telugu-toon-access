@@ -63,6 +63,7 @@ function CheckoutPage() {
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<CouponState | null>(null);
   const [qr, setQr] = useState<string | null>(null);
+  const [hasPaid, setHasPaid] = useState(false);
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
@@ -170,7 +171,7 @@ function CheckoutPage() {
           Complete your <span className="text-gradient">purchase</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Step 1 — pay via UPI. Step 2 — create your order and submit the payment reference (UTR).
+          Step 1 — pay via UPI. Step 2 — confirm you have paid. Step 3 — create your order and submit the UTR.
         </p>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -242,9 +243,15 @@ function CheckoutPage() {
               </div>
             </div>
 
-            <Button type="submit" variant="hero" size="lg" className="mt-7 w-full" disabled={orderMutation.isPending}>
-              {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />} I have paid — continue
-            </Button>
+            {hasPaid ? (
+              <Button type="submit" variant="hero" size="lg" className="mt-7 w-full" disabled={orderMutation.isPending}>
+                {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />} I have paid — continue
+              </Button>
+            ) : (
+              <div className="mt-7 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
+                Complete the payment and confirm below to continue
+              </div>
+            )}
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Your order is verified manually by the admin, usually within a few hours.
             </p>
@@ -328,6 +335,20 @@ function CheckoutPage() {
                   ))}
                 </div>
               </div>
+
+              <div className="mt-5 flex items-start gap-3 rounded-2xl bg-card p-4 text-left">
+                <input
+                  type="checkbox"
+                  id="has-paid"
+                  checked={hasPaid}
+                  onChange={(e) => setHasPaid(e.target.checked)}
+                  className="mt-0.5 size-4 accent-highlight"
+                />
+                <label htmlFor="has-paid" className="cursor-pointer text-sm leading-snug">
+                  I have completed the payment
+                </label>
+              </div>
+
               <p className="mt-4 text-xs text-muted-foreground">
                 After paying, submit your 12-digit UTR / reference number — the admin then approves or rejects it.
               </p>
