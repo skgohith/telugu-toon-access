@@ -54,7 +54,7 @@ function CheckoutPage() {
   const { planId } = Route.useSearch();
   const navigate = useNavigate();
 
-  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
+  const { data: plans, isLoading: plansLoading } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
   const { data: payment } = useQuery({ queryKey: ["payment-details"], queryFn: () => getPaymentDetails() });
 
   const plan = useMemo(() => (plans ?? []).find((p) => p.id === planId) ?? null, [plans, planId]);
@@ -126,6 +126,16 @@ function CheckoutPage() {
       tn: `${plan!.name} ${note}`,
     });
     return `${scheme}${params.toString()}`;
+  }
+
+  if (plansLoading) {
+    return (
+      <SiteLayout>
+        <div className="flex min-h-[60vh] items-center justify-center">
+          <Loader2 className="size-6 animate-spin text-highlight" />
+        </div>
+      </SiteLayout>
+    );
   }
 
   if (!plan) {

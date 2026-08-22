@@ -46,6 +46,10 @@ function PlansPage() {
           <div className="mt-16 flex justify-center">
             <Loader2 className="size-6 animate-spin text-highlight" />
           </div>
+        ) : (plans ?? []).length === 0 ? (
+          <p className="mt-16 text-center text-sm text-muted-foreground">
+            Plans are being updated right now. Please check back in a moment.
+          </p>
         ) : (
           <div className="mt-14 grid gap-6 md:grid-cols-2">
             {(plans ?? []).map((plan, index) => (
@@ -69,7 +73,7 @@ function PlansPage() {
 
                 <div className="mt-6 flex items-end gap-2">
                   <span className="text-5xl font-extrabold text-gradient">{inr(plan.price)}</span>
-                  <span className="pb-2 text-sm text-muted-foreground">/ {"\u00a0"}{plan.duration_label}</span>
+                  <span className="pb-2 text-sm text-muted-foreground">/ {plan.duration_label}</span>
                 </div>
 
                 <ul className="mt-7 space-y-3 text-sm">
