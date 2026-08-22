@@ -335,6 +335,20 @@ function CheckoutPage() {
                   ))}
                 </div>
               </div>
+
+              <div className="mt-5 flex items-start gap-3 rounded-2xl bg-card p-4 text-left">
+                <input
+                  type="checkbox"
+                  id="has-paid"
+                  checked={hasPaid}
+                  onChange={(e) => setHasPaid(e.target.checked)}
+                  className="mt-0.5 size-4 accent-highlight"
+                />
+                <label htmlFor="has-paid" className="cursor-pointer text-sm leading-snug">
+                  I have completed the payment
+                </label>
+              </div>
+
               <p className="mt-4 text-xs text-muted-foreground">
                 After paying, submit your 12-digit UTR / reference number — the admin then approves or rejects it.
               </p>
