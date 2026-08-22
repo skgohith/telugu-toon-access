@@ -182,7 +182,6 @@ function PaymentStatusPage() {
               <Row label="Coupon" value={order.coupon_code ?? "—"} />
               <Row label="Created" value={dateTime(order.created_at)} />
               <Row label="Reference (UTR)" value={order.utr ?? "Not submitted"} />
-              <Row label="Telegram access" value={order.telegram_access ? "Unlocked" : "Locked"} />
             </dl>
 
             <Timeline order={order} />
