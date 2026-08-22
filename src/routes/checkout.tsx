@@ -301,9 +301,30 @@ function CheckoutPage() {
                   <Copy />
                 </Button>
               </div>
+              <div className="mt-6 border-t border-border/60 pt-5 text-left">
+                <p className="text-sm font-bold">Pay with a UPI app</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  On mobile, tap an app to open it with the amount pre-filled. You will come back here to enter the UTR.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {UPI_APPS.map((app) => (
+                    <Button
+                      key={app.label}
+                      type="button"
+                      variant="glass"
+                      className="justify-start"
+                      disabled={orderMutation.isPending}
+                      onClick={() => payWithApp(app.scheme)}
+                    >
+                      <Smartphone /> {app.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <p className="mt-4 text-xs text-muted-foreground">
-                After paying, continue to submit your 12-digit UTR / reference number.
+                After paying, submit your 12-digit UTR / reference number — the admin then approves or rejects it.
               </p>
+
             </div>
           </div>
         </div>
