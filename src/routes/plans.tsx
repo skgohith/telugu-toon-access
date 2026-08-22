@@ -22,8 +22,12 @@ export const Route = createFileRoute("/plans")({
       { property: "og:description", content: "Two simple premium plans with UPI payment and coupon support." },
     ],
   }),
+  loader: ({ context }) => {
+    void context.queryClient.prefetchQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
+  },
   component: PlansPage,
 });
+
 
 function PlansPage() {
   const navigate = useNavigate();
