@@ -263,36 +263,34 @@ export const submitUtr = createServerFn({ method: "POST" })
   });
 
 /**
- * The private Telegram invite link is stored server-side and released ONLY for an
+ * The private Telegram invite link is stored per-plan and released ONLY for an
  * order the admin has approved.
  */
 export const getTelegramAccess = createServerFn({ method: "POST" })
   .inputValidator((raw) => lookupSchema.parse(raw))
   .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: approved } = await supabaseAdmin
+    const { data: order } = await supabaseAdmin
       .from("orders")
-      .select("id")
+      .select("id, plan_id, payment_status, telegram_access")
       .eq("order_ref", data.orderRef.trim().toUpperCase())
       .ilike("customer_email", data.email.trim())
-      .eq("payment_status", "completed")
-      .eq("telegram_access", true)
       .maybeSingle();
 
-    if (!approved) {
+    if (!order || order.payment_status !== "completed" || !order.telegram_access) {
       return { ok: false as const, message: "Telegram access unlocks after your payment is verified." };
     }
 
-    const { data: setting } = await supabaseAdmin
-      .from("app_settings")
-      .select("value")
-      .eq("key", "telegram_invite_link")
+    const { data: plan } = await supabaseAdmin
+      .from("plans")
+      .select("telegram_link")
+      .eq("id", order.plan_id)
       .maybeSingle();
 
-    if (!setting?.value) {
+    if (!plan?.telegram_link) {
       return { ok: false as const, message: "Telegram link is not configured yet. Please contact support." };
     }
-    return { ok: true as const, link: setting.value };
+    return { ok: true as const, link: plan.telegram_link };
   });
 
 /** Admin-only identity check used by the admin panel and navbar. */
