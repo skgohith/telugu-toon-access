@@ -243,9 +243,15 @@ function CheckoutPage() {
               </div>
             </div>
 
-            <Button type="submit" variant="hero" size="lg" className="mt-7 w-full" disabled={orderMutation.isPending}>
-              {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />} I have paid — continue
-            </Button>
+            {hasPaid ? (
+              <Button type="submit" variant="hero" size="lg" className="mt-7 w-full" disabled={orderMutation.isPending}>
+                {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />} I have paid — continue
+              </Button>
+            ) : (
+              <div className="mt-7 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
+                Complete the payment and confirm below to continue
+              </div>
+            )}
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Your order is verified manually by the admin, usually within a few hours.
             </p>
