@@ -43,6 +43,11 @@ function round2(value: number) {
   return Math.round(value * 100) / 100;
 }
 
+const lookupSchema = z.object({
+  orderRef: z.string().trim().min(4).max(40),
+  email: z.string().trim().email().max(160),
+});
+
 export const listPlans = createServerFn({ method: "GET" }).handler(async (): Promise<PublicPlan[]> => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
   const { data, error } = await supabaseAdmin
@@ -112,8 +117,8 @@ export const validateCoupon = createServerFn({ method: "POST" })
     };
   });
 
+/** Guest checkout — no customer account required. Amounts are computed server-side. */
 export const createOrder = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((raw) =>
     z
       .object({
@@ -128,7 +133,7 @@ export const createOrder = createServerFn({ method: "POST" })
       })
       .parse(raw),
   )
-  .handler(async ({ data, context }): Promise<OrderRow> => {
+  .handler(async ({ data }): Promise<OrderRow> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
     const { data: plan, error: planError } = await supabaseAdmin
@@ -173,13 +178,13 @@ export const createOrder = createServerFn({ method: "POST" })
     const { data: order, error } = await supabaseAdmin
       .from("orders")
       .insert({
-        user_id: context.userId,
+        user_id: null,
         plan_id: plan.id,
         plan_name: plan.name,
         coupon_id: couponId,
         coupon_code: couponCode,
         customer_name: data.name,
-        customer_email: data.email,
+        customer_email: data.email.trim().toLowerCase(),
         customer_phone: data.phone,
         original_amount: original,
         discount_amount: discount,
@@ -191,20 +196,27 @@ export const createOrder = createServerFn({ method: "POST" })
       .single();
     if (error) throw new Error(error.message);
 
-    await supabaseAdmin
-      .from("profiles")
-      .update({ name: data.name, email: data.email, phone: data.phone })
-      .eq("id", context.userId);
-
     return order as OrderRow;
   });
 
+/** Guests look up their order with the order reference + the email used at checkout. */
+export const trackOrder = createServerFn({ method: "POST" })
+  .inputValidator((raw) => lookupSchema.parse(raw))
+  .handler(async ({ data }): Promise<OrderRow | null> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select(ORDER_COLUMNS)
+      .eq("order_ref", data.orderRef.trim().toUpperCase())
+      .ilike("customer_email", data.email.trim())
+      .maybeSingle();
+    return (order as OrderRow | null) ?? null;
+  });
+
 export const submitUtr = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
   .inputValidator((raw) =>
-    z
-      .object({
-        orderId: z.string().uuid(),
+    lookupSchema
+      .extend({
         utr: z
           .string()
           .trim()
@@ -214,16 +226,17 @@ export const submitUtr = createServerFn({ method: "POST" })
       })
       .parse(raw),
   )
-  .handler(async ({ data, context }): Promise<OrderRow> => {
+  .handler(async ({ data }): Promise<OrderRow> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+    const ref = data.orderRef.trim().toUpperCase();
     const { data: existing } = await supabaseAdmin
       .from("orders")
       .select("id, payment_status")
-      .eq("id", data.orderId)
-      .eq("user_id", context.userId)
+      .eq("order_ref", ref)
+      .ilike("customer_email", data.email.trim())
       .maybeSingle();
-    if (!existing) throw new Error("Order not found.");
+    if (!existing) throw new Error("Order not found. Check your reference and email.");
     if (existing.payment_status !== "pending") {
       throw new Error("This order has already been reviewed by the admin.");
     }
@@ -231,58 +244,31 @@ export const submitUtr = createServerFn({ method: "POST" })
     const { data: order, error } = await supabaseAdmin
       .from("orders")
       .update({ utr: data.utr.trim().toUpperCase() })
-      .eq("id", data.orderId)
-      .eq("user_id", context.userId)
+      .eq("id", existing.id)
       .select(ORDER_COLUMNS)
       .single();
     if (error) throw new Error(error.message);
     return order as OrderRow;
   });
 
-export const myOrders = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }): Promise<OrderRow[]> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("orders")
-      .select(ORDER_COLUMNS)
-      .eq("user_id", context.userId)
-      .order("created_at", { ascending: false });
-    if (error) throw new Error(error.message);
-    return (data ?? []) as OrderRow[];
-  });
-
-export const myProfile = createServerFn({ method: "GET" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const [{ data: profile }, { data: roles }] = await Promise.all([
-      supabaseAdmin.from("profiles").select("id, name, email, phone, created_at").eq("id", context.userId).maybeSingle(),
-      supabaseAdmin.from("user_roles").select("role").eq("user_id", context.userId),
-    ]);
-    return {
-      profile: profile ?? null,
-      isAdmin: (roles ?? []).some((r) => r.role === "admin"),
-    };
-  });
-
 /**
- * The private Telegram invite link is stored server-side and released ONLY when
- * the signed-in customer has an approved (completed) order.
+ * The private Telegram invite link is stored server-side and released ONLY for an
+ * order the admin has approved.
  */
 export const getTelegramAccess = createServerFn({ method: "POST" })
-  .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((raw) => lookupSchema.parse(raw))
+  .handler(async ({ data }) => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
     const { data: approved } = await supabaseAdmin
       .from("orders")
       .select("id")
-      .eq("user_id", context.userId)
+      .eq("order_ref", data.orderRef.trim().toUpperCase())
+      .ilike("customer_email", data.email.trim())
       .eq("payment_status", "completed")
       .eq("telegram_access", true)
-      .limit(1);
+      .maybeSingle();
 
-    if (!approved || approved.length === 0) {
+    if (!approved) {
       return { ok: false as const, message: "Telegram access unlocks after your payment is verified." };
     }
 
@@ -296,6 +282,21 @@ export const getTelegramAccess = createServerFn({ method: "POST" })
       return { ok: false as const, message: "Telegram link is not configured yet. Please contact support." };
     }
     return { ok: true as const, link: setting.value };
+  });
+
+/** Admin-only identity check used by the admin panel and navbar. */
+export const myProfile = createServerFn({ method: "GET" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const [{ data: profile }, { data: roles }] = await Promise.all([
+      supabaseAdmin.from("profiles").select("id, name, email, phone, created_at").eq("id", context.userId).maybeSingle(),
+      supabaseAdmin.from("user_roles").select("role").eq("user_id", context.userId),
+    ]);
+    return {
+      profile: profile ?? null,
+      isAdmin: (roles ?? []).some((r) => r.role === "admin"),
+    };
   });
 
 export const getPaymentDetails = createServerFn({ method: "GET" }).handler(async () => {
