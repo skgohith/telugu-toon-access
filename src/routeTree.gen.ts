@@ -14,6 +14,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as DashboardRouteImport } from './routes/dashboard'
+import { Route as LegalRouteImport } from './routes/legal'
 import { Route as PaymentStatusRouteImport } from './routes/payment-status'
 import { Route as PlansRouteImport } from './routes/plans'
 import { Route as SupportRouteImport } from './routes/support'
@@ -43,6 +44,11 @@ const DashboardRoute = DashboardRouteImport.update({
   path: '/dashboard',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LegalRoute = LegalRouteImport.update({
+  id: '/legal',
+  path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PaymentStatusRoute = PaymentStatusRouteImport.update({
   id: '/payment-status',
   path: '/payment-status',
@@ -65,6 +71,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/legal': typeof LegalRoute
   '/payment-status': typeof PaymentStatusRoute
   '/plans': typeof PlansRoute
   '/support': typeof SupportRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/legal': typeof LegalRoute
   '/payment-status': typeof PaymentStatusRoute
   '/plans': typeof PlansRoute
   '/support': typeof SupportRoute
@@ -86,6 +94,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRoute
   '/checkout': typeof CheckoutRoute
   '/dashboard': typeof DashboardRoute
+  '/legal': typeof LegalRoute
   '/payment-status': typeof PaymentStatusRoute
   '/plans': typeof PlansRoute
   '/support': typeof SupportRoute
@@ -98,6 +107,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/dashboard'
+    | '/legal'
     | '/payment-status'
     | '/plans'
     | '/support'
@@ -108,6 +118,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/dashboard'
+    | '/legal'
     | '/payment-status'
     | '/plans'
     | '/support'
@@ -118,6 +129,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/checkout'
     | '/dashboard'
+    | '/legal'
     | '/payment-status'
     | '/plans'
     | '/support'
@@ -129,6 +141,7 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRoute
   CheckoutRoute: typeof CheckoutRoute
   DashboardRoute: typeof DashboardRoute
+  LegalRoute: typeof LegalRoute
   PaymentStatusRoute: typeof PaymentStatusRoute
   PlansRoute: typeof PlansRoute
   SupportRoute: typeof SupportRoute
@@ -171,6 +184,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DashboardRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/legal': {
+      id: '/legal'
+      path: '/legal'
+      fullPath: '/legal'
+      preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/payment-status': {
       id: '/payment-status'
       path: '/payment-status'
@@ -201,6 +221,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRoute,
   CheckoutRoute: CheckoutRoute,
   DashboardRoute: DashboardRoute,
+  LegalRoute: LegalRoute,
   PaymentStatusRoute: PaymentStatusRoute,
   PlansRoute: PlansRoute,
   SupportRoute: SupportRoute,
