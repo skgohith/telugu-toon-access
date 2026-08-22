@@ -22,27 +22,12 @@ export const Route = createFileRoute("/plans")({
       { property: "og:description", content: "Two simple premium plans with UPI payment and coupon support." },
     ],
   }),
-
-
   component: PlansPage,
 });
 
-
 function PlansPage() {
   const navigate = useNavigate();
-  const {
-    data: plans,
-    isPending,
-    isError,
-    refetch,
-    isRefetching,
-  } = useQuery({
-    queryKey: ["plans"],
-    queryFn: () => listPlans(),
-    retry: 3,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
-    staleTime: 60_000,
-  });
+  const { data: plans, isLoading } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
 
   function choose(planId: string) {
     navigate({ to: "/checkout", search: { planId } });
@@ -57,21 +42,11 @@ function PlansPage() {
           subtitle="Pay securely via UPI, submit your reference number, and get Telegram access after admin verification."
         />
 
-        {isPending || isRefetching ? (
+        {isLoading ? (
           <div className="mt-16 flex justify-center">
             <Loader2 className="size-6 animate-spin text-highlight" />
           </div>
-        ) : isError || (plans ?? []).length === 0 ? (
-          <div className="glass mx-auto mt-16 max-w-md rounded-3xl p-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              We couldn&apos;t load the plans just now. Please try again.
-            </p>
-            <Button variant="hero" className="mt-5" onClick={() => refetch()}>
-              Retry
-            </Button>
-          </div>
         ) : (
-
           <div className="mt-14 grid gap-6 md:grid-cols-2">
             {(plans ?? []).map((plan, index) => (
               <motion.div
@@ -94,7 +69,7 @@ function PlansPage() {
 
                 <div className="mt-6 flex items-end gap-2">
                   <span className="text-5xl font-extrabold text-gradient">{inr(plan.price)}</span>
-                  <span className="pb-2 text-sm text-muted-foreground">/ {plan.duration_label}</span>
+                  <span className="pb-2 text-sm text-muted-foreground">/ {"\u00a0"}{plan.duration_label}</span>
                 </div>
 
                 <ul className="mt-7 space-y-3 text-sm">
