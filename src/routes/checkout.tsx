@@ -108,15 +108,20 @@ function CheckoutPage() {
       const target = { to: "/payment-status" as const, search: { ref: order.order_ref, email: order.customer_email } };
       if (variables.appScheme) {
         const link = buildUpiLink(variables.appScheme, order.order_ref);
-        toast.success("Opening your UPI app — come back and enter the UTR after paying.");
-        window.location.href = link;
-        window.setTimeout(() => navigate(target), 1200);
+        toast.success(`Opening ${openingApp ?? "your UPI app"} — complete the payment and return here to enter the UTR.`);
+        // Use assign for a clean redirect; give the device a few seconds to hand off to the app
+        // before switching the browser tab to the UTR submission page.
+        window.location.assign(link);
+        window.setTimeout(() => navigate(target), 3000);
         return;
       }
       toast.success("Order created. Submit your payment reference next.");
       navigate(target);
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not create order"),
+    onError: (error) => {
+      setOpeningApp(null);
+      toast.error(error instanceof Error ? error.message : "Could not create order");
+    },
   });
 
   function buildUpiLink(scheme: string, note: string) {
