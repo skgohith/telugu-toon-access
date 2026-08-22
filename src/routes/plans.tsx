@@ -6,7 +6,7 @@ import { motion } from "motion/react";
 import { SectionHeading, SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { inr } from "@/lib/format";
-import { listPlans } from "@/lib/store.functions";
+import { listPublicPlans } from "@/lib/plans.public";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/plans")({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/plans")({
 
 function PlansPage() {
   const navigate = useNavigate();
-  const { data: plans, isLoading, error, refetch } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
+  const { data: plans, isLoading, error, refetch } = useQuery({ queryKey: ["plans"], queryFn: listPublicPlans });
 
   function choose(planId: string) {
     navigate({ to: "/checkout", search: { planId } });
