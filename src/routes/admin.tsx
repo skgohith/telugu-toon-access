@@ -36,23 +36,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { dateOnly, dateTime, inr } from "@/lib/format";
 import { myProfile } from "@/lib/store.functions";
 import {
   type AdminCoupon,
-  type AdminPlan,
   adminClearData,
   adminCoupons,
-  adminCustomers,
   adminDeleteCoupon,
   adminOrders,
   adminOverview,
   adminPlans,
   adminProofUrl,
   adminSaveCoupon,
-  adminSavePlan,
   adminSetOrderStatus,
 } from "@/lib/admin.functions";
 
