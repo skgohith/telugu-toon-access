@@ -101,7 +101,7 @@ function AdminPage() {
           <h1 className="mt-4 text-2xl font-extrabold">Admins only</h1>
           <p className="mt-2 text-sm text-muted-foreground">This area is restricted to the store administrator.</p>
           <Button asChild variant="hero" className="mt-6">
-            <Link to="/dashboard">Back to dashboard</Link>
+            <Link to="/">Back to home</Link>
           </Button>
         </div>
       </SiteLayout>
