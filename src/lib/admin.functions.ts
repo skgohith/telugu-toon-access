@@ -16,6 +16,7 @@ export type AdminOrder = {
   discount_amount: number;
   final_amount: number;
   utr: string | null;
+  proof_path: string | null;
   payment_status: "pending" | "completed" | "rejected";
   telegram_access: boolean;
   approved_at: string | null;
@@ -62,7 +63,7 @@ export type AdminCustomer = {
 };
 
 const ADMIN_ORDER_COLUMNS =
-  "id, order_ref, user_id, plan_name, coupon_code, customer_name, customer_email, customer_phone, original_amount, discount_amount, final_amount, utr, payment_status, telegram_access, approved_at, rejected_at, created_at";
+  "id, order_ref, user_id, plan_name, coupon_code, customer_name, customer_email, customer_phone, original_amount, discount_amount, final_amount, utr, proof_path, payment_status, telegram_access, approved_at, rejected_at, created_at";
 
 type AuthedContext = { userId: string; supabase: { rpc: (fn: string, args: Record<string, unknown>) => Promise<{ data: unknown }> } };
 
@@ -408,4 +409,26 @@ export const adminClearData = createServerFn({ method: "POST" })
     const { error } = await supabaseAdmin.from("orders").delete().eq("payment_status", data.scope);
     if (error) throw new Error(error.message);
     return { ok: true as const, cleared: data.scope };
+  });
+
+/** Signed, short-lived URL so an admin can view a customer's uploaded payment proof. */
+export const adminProofUrl = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((raw) => z.object({ orderId: z.string().uuid() }).parse(raw))
+  .handler(async ({ data, context }) => {
+    await assertAdmin(context as unknown as AuthedContext);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    const { data: order } = await supabaseAdmin
+      .from("orders")
+      .select("proof_path")
+      .eq("id", data.orderId)
+      .maybeSingle();
+    if (!order?.proof_path) return { ok: false as const, message: "No payment proof uploaded for this order." };
+
+    const { data: signed, error } = await supabaseAdmin.storage
+      .from("payment-proofs")
+      .createSignedUrl(order.proof_path, 300);
+    if (error || !signed) return { ok: false as const, message: error?.message ?? "Could not open the proof." };
+    return { ok: true as const, url: signed.signedUrl };
   });
