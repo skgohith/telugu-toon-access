@@ -5,6 +5,7 @@ import {
   BadgeIndianRupee,
   CheckCircle2,
   Clock,
+  ImageUp,
   Loader2,
   Search,
   ShieldCheck,
@@ -49,6 +50,7 @@ import {
   adminOrders,
   adminOverview,
   adminPlans,
+  adminProofUrl,
   adminSaveCoupon,
   adminSavePlan,
   adminSetOrderStatus,
@@ -285,6 +287,18 @@ function OrdersTab() {
       queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Update failed"),
+  });
+
+  const proofMutation = useMutation({
+    mutationFn: (input: { orderId: string }) => adminProofUrl({ data: input }),
+    onSuccess: (result) => {
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      window.open(result.url, "_blank", "noopener,noreferrer");
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not open the proof"),
   });
 
   return (
