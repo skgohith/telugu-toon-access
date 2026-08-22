@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Loader2, ShieldCheck, TicketPercent } from "lucide-react";
+import { Copy, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -14,6 +14,13 @@ import { inr } from "@/lib/format";
 import { createOrder, getPaymentDetails, listPlans, validateCoupon } from "@/lib/store.functions";
 
 const searchSchema = z.object({ planId: z.string().optional() });
+
+const UPI_APPS = [
+  { label: "Google Pay", scheme: "tez://upi/pay?" },
+  { label: "PhonePe", scheme: "phonepe://pay?" },
+  { label: "Paytm", scheme: "paytmmp://pay?" },
+  { label: "Any UPI app", scheme: "upi://pay?" },
+] as const;
 
 export const Route = createFileRoute("/checkout")({
   validateSearch: (search) => searchSchema.parse(search),
@@ -85,7 +92,7 @@ function CheckoutPage() {
   });
 
   const orderMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (_opts: { appScheme?: string }) =>
       createOrder({
         data: {
           planId: plan!.id,
@@ -95,12 +102,31 @@ function CheckoutPage() {
           phone: form.phone.trim(),
         },
       }),
-    onSuccess: (order) => {
+    onSuccess: (order, variables) => {
+      const target = { to: "/payment-status" as const, search: { ref: order.order_ref, email: order.customer_email } };
+      if (variables.appScheme) {
+        const link = buildUpiLink(variables.appScheme, order.order_ref);
+        toast.success("Opening your UPI app — come back and enter the UTR after paying.");
+        window.location.href = link;
+        window.setTimeout(() => navigate(target), 1200);
+        return;
+      }
       toast.success("Order created. Submit your payment reference next.");
-      navigate({ to: "/payment-status", search: { ref: order.order_ref, email: order.customer_email } });
+      navigate(target);
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not create order"),
   });
+
+  function buildUpiLink(scheme: string, note: string) {
+    const params = new URLSearchParams({
+      pa: upiId,
+      pn: "Telugu-Toon-World",
+      am: String(amountDue),
+      cu: "INR",
+      tn: `${plan!.name} ${note}`,
+    });
+    return `${scheme}${params.toString()}`;
+  }
 
   if (!plan) {
     return (
@@ -116,15 +142,26 @@ function CheckoutPage() {
     );
   }
 
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
+  function validDetails() {
     const parsed = formSchema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check your details");
-      return;
+      return false;
     }
-    orderMutation.mutate();
+    return true;
   }
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!validDetails()) return;
+    orderMutation.mutate({});
+  }
+
+  function payWithApp(scheme: string) {
+    if (!validDetails()) return;
+    orderMutation.mutate({ appScheme: scheme });
+  }
+
 
   return (
     <SiteLayout>
@@ -271,9 +308,30 @@ function CheckoutPage() {
                   <Copy />
                 </Button>
               </div>
+              <div className="mt-6 border-t border-border/60 pt-5 text-left">
+                <p className="text-sm font-bold">Pay with a UPI app</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  On mobile, tap an app to open it with the amount pre-filled. You will come back here to enter the UTR.
+                </p>
+                <div className="mt-4 grid grid-cols-2 gap-2">
+                  {UPI_APPS.map((app) => (
+                    <Button
+                      key={app.label}
+                      type="button"
+                      variant="glass"
+                      className="justify-start"
+                      disabled={orderMutation.isPending}
+                      onClick={() => payWithApp(app.scheme)}
+                    >
+                      <Smartphone /> {app.label}
+                    </Button>
+                  ))}
+                </div>
+              </div>
               <p className="mt-4 text-xs text-muted-foreground">
-                After paying, continue to submit your 12-digit UTR / reference number.
+                After paying, submit your 12-digit UTR / reference number — the admin then approves or rejects it.
               </p>
+
             </div>
           </div>
         </div>
