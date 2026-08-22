@@ -164,8 +164,9 @@ function CheckoutPage() {
     orderMutation.mutate({});
   }
 
-  function payWithApp(scheme: string) {
+  function payWithApp(scheme: string, label: string) {
     if (!validDetails()) return;
+    setOpeningApp(label);
     orderMutation.mutate({ appScheme: scheme });
   }
 
