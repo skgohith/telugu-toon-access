@@ -36,23 +36,19 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Textarea } from "@/components/ui/textarea";
 import { useAuth } from "@/hooks/useAuth";
 import { dateOnly, dateTime, inr } from "@/lib/format";
 import { myProfile } from "@/lib/store.functions";
 import {
   type AdminCoupon,
-  type AdminPlan,
   adminClearData,
   adminCoupons,
-  adminCustomers,
   adminDeleteCoupon,
   adminOrders,
   adminOverview,
   adminPlans,
   adminProofUrl,
   adminSaveCoupon,
-  adminSavePlan,
   adminSetOrderStatus,
 } from "@/lib/admin.functions";
 
@@ -123,8 +119,6 @@ function AdminPage() {
             <TabsTrigger value="overview">Overview</TabsTrigger>
             <TabsTrigger value="orders">Orders</TabsTrigger>
             <TabsTrigger value="coupons">Coupons</TabsTrigger>
-            <TabsTrigger value="plans">Plans</TabsTrigger>
-            <TabsTrigger value="customers">Customers</TabsTrigger>
             <TabsTrigger value="data">Data</TabsTrigger>
           </TabsList>
 
@@ -136,12 +130,6 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="coupons" className="mt-6">
             <CouponsTab />
-          </TabsContent>
-          <TabsContent value="plans" className="mt-6">
-            <PlansTab />
-          </TabsContent>
-          <TabsContent value="customers" className="mt-6">
-            <CustomersTab />
           </TabsContent>
           <TabsContent value="data" className="mt-6">
             <DataTab />
@@ -605,198 +593,6 @@ function CouponsTab() {
   );
 }
 
-function PlansTab() {
-  const { data: plans, isLoading } = useQuery({ queryKey: ["admin-plans"], queryFn: () => adminPlans() });
-
-  if (isLoading) return <Spinner />;
-
-  return (
-    <div className="grid gap-6 md:grid-cols-2">
-      {(plans ?? []).map((plan) => (
-        <PlanEditor key={plan.id} plan={plan} />
-      ))}
-    </div>
-  );
-}
-
-function PlanEditor({ plan }: { plan: AdminPlan }) {
-  const queryClient = useQueryClient();
-  const [draft, setDraft] = useState({
-    name: plan.name,
-    price: Number(plan.price),
-    durationDays: plan.duration_days,
-    durationLabel: plan.duration_label,
-    description: plan.description,
-    features: plan.features.join("\n"),
-    active: plan.active,
-    recommended: plan.recommended,
-  });
-
-  const mutation = useMutation({
-    mutationFn: () =>
-      adminSavePlan({
-        data: {
-          id: plan.id,
-          name: draft.name,
-          price: Number(draft.price),
-          durationDays: Number(draft.durationDays),
-          durationLabel: draft.durationLabel,
-          description: draft.description,
-          features: draft.features
-            .split("\n")
-            .map((f) => f.trim())
-            .filter(Boolean),
-          active: draft.active,
-          recommended: draft.recommended,
-        },
-      }),
-    onSuccess: () => {
-      toast.success(`${draft.name} updated`);
-      queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
-      queryClient.invalidateQueries({ queryKey: ["plans"] });
-    },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save plan"),
-  });
-
-  return (
-    <form
-      className="glass rounded-3xl p-6"
-      onSubmit={(event) => {
-        event.preventDefault();
-        mutation.mutate();
-      }}
-    >
-      <h2 className="font-display text-lg font-bold">{plan.name}</h2>
-      <div className="mt-5 space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor={`name-${plan.id}`}>Name</Label>
-          <Input
-            id={`name-${plan.id}`}
-            value={draft.name}
-            maxLength={60}
-            onChange={(e) => setDraft({ ...draft, name: e.target.value })}
-          />
-        </div>
-        <div className="grid gap-4 sm:grid-cols-3">
-          <div className="space-y-2">
-            <Label htmlFor={`price-${plan.id}`}>Price (₹)</Label>
-            <Input
-              id={`price-${plan.id}`}
-              type="number"
-              min={0}
-              value={draft.price}
-              onChange={(e) => setDraft({ ...draft, price: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor={`days-${plan.id}`}>Days</Label>
-            <Input
-              id={`days-${plan.id}`}
-              type="number"
-              min={1}
-              value={draft.durationDays}
-              onChange={(e) => setDraft({ ...draft, durationDays: Number(e.target.value) })}
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor={`label-${plan.id}`}>Duration label</Label>
-            <Input
-              id={`label-${plan.id}`}
-              value={draft.durationLabel}
-              maxLength={40}
-              onChange={(e) => setDraft({ ...draft, durationLabel: e.target.value })}
-            />
-          </div>
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`desc-${plan.id}`}>Description</Label>
-          <Textarea
-            id={`desc-${plan.id}`}
-            value={draft.description}
-            maxLength={500}
-            onChange={(e) => setDraft({ ...draft, description: e.target.value })}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor={`features-${plan.id}`}>Features (one per line)</Label>
-          <Textarea
-            id={`features-${plan.id}`}
-            value={draft.features}
-            rows={5}
-            onChange={(e) => setDraft({ ...draft, features: e.target.value })}
-          />
-        </div>
-        <div className="flex flex-wrap gap-4">
-          <div className="flex flex-1 items-center justify-between rounded-2xl bg-muted/40 px-4 py-3">
-            <Label htmlFor={`active-${plan.id}`}>Active</Label>
-            <Switch
-              id={`active-${plan.id}`}
-              checked={draft.active}
-              onCheckedChange={(v) => setDraft({ ...draft, active: v })}
-            />
-          </div>
-          <div className="flex flex-1 items-center justify-between rounded-2xl bg-muted/40 px-4 py-3">
-            <Label htmlFor={`rec-${plan.id}`}>Popular</Label>
-            <Switch
-              id={`rec-${plan.id}`}
-              checked={draft.recommended}
-              onCheckedChange={(v) => setDraft({ ...draft, recommended: v })}
-            />
-          </div>
-        </div>
-      </div>
-      <Button type="submit" variant="hero" className="mt-6 w-full" disabled={mutation.isPending}>
-        {mutation.isPending ? <Loader2 className="animate-spin" /> : null} Save plan
-      </Button>
-    </form>
-  );
-}
-
-function CustomersTab() {
-  const { data, isLoading } = useQuery({ queryKey: ["admin-customers"], queryFn: () => adminCustomers() });
-
-  if (isLoading) return <Spinner />;
-
-  return (
-    <div className="glass overflow-x-auto rounded-3xl p-6">
-      <h2 className="font-display text-lg font-bold">Customers</h2>
-      {(data ?? []).length === 0 ? (
-        <p className="mt-6 text-sm text-muted-foreground">No customers yet.</p>
-      ) : (
-        <table className="mt-5 w-full min-w-[720px] text-sm">
-          <thead>
-            <tr className="text-left text-xs uppercase tracking-widest text-muted-foreground">
-              <th className="pb-3">Customer</th>
-              <th className="pb-3">Contact</th>
-              <th className="pb-3">Orders</th>
-              <th className="pb-3">Spent</th>
-              <th className="pb-3">Plan</th>
-              <th className="pb-3">Access</th>
-              <th className="pb-3">Joined</th>
-            </tr>
-          </thead>
-          <tbody>
-            {(data ?? []).map((customer) => (
-              <tr key={customer.id} className="border-t border-border/60">
-                <td className="py-3 font-semibold">{customer.name || "—"}</td>
-                <td className="py-3 text-muted-foreground">
-                  {customer.email}
-                  <br />
-                  {customer.phone || "—"}
-                </td>
-                <td className="py-3">{customer.orderCount}</td>
-                <td className="py-3">{inr(customer.totalSpent)}</td>
-                <td className="py-3">{customer.currentPlan ?? "—"}</td>
-                <td className="py-3">{customer.telegramAccess ? "Unlocked" : "Locked"}</td>
-                <td className="py-3 text-muted-foreground">{dateOnly(customer.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </div>
-  );
-}
 
 const SCOPES = [
   { value: "pending", label: "Clear pending orders" },
