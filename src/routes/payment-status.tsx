@@ -97,6 +97,8 @@ function PaymentStatusPage() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not fetch the invite link"),
   });
 
+  const utrLocked = utrMutation.isPending || uploading || justSubmitted;
+
   function doLookup(event: React.FormEvent) {
     event.preventDefault();
     if (lookup.ref.trim().length < 4 || !lookup.email.includes("@")) {
@@ -183,17 +185,20 @@ function PaymentStatusPage() {
               <Row label="Telegram access" value={order.telegram_access ? "Unlocked" : "Locked"} />
             </dl>
 
+            <Timeline order={order} />
+
             {order.payment_status === "pending" && (
               <div className="mt-8 rounded-3xl bg-highlight/10 p-6">
                 <h3 className="font-display text-lg font-bold text-highlight">Submit your payment reference</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Enter the UTR / transaction reference from your UPI app. You can update it until the admin reviews your
-                  order.
+                  Enter the UTR / transaction reference from your UPI app and optionally attach a screenshot of the
+                  payment. You can update it until the admin reviews your order.
                 </p>
                 <form
-                  className="mt-5 flex flex-col gap-3 sm:flex-row"
+                  className="mt-5 space-y-4"
                   onSubmit={(event) => {
                     event.preventDefault();
+                    if (utrLocked) return;
                     if (utr.trim().length < 6) {
                       toast.error("UTR must be at least 6 characters");
                       return;
@@ -201,10 +206,8 @@ function PaymentStatusPage() {
                     utrMutation.mutate();
                   }}
                 >
-                  <div className="flex-1 space-y-2">
-                    <Label htmlFor="utr" className="sr-only">
-                      UTR number
-                    </Label>
+                  <div className="space-y-2">
+                    <Label htmlFor="utr">UTR / transaction reference</Label>
                     <Input
                       id="utr"
                       value={utr}
@@ -213,8 +216,41 @@ function PaymentStatusPage() {
                       onChange={(e) => setUtr(e.target.value.toUpperCase())}
                     />
                   </div>
-                  <Button type="submit" variant="gold" disabled={utrMutation.isPending}>
-                    {utrMutation.isPending ? <Loader2 className="animate-spin" /> : <Send />} Submit reference
+
+                  <div className="space-y-2">
+                    <Label htmlFor="proof">Payment screenshot (optional)</Label>
+                    <Input
+                      id="proof"
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      className="file:mr-3 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-semibold"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0] ?? null;
+                        if (file && file.size > 5 * 1024 * 1024) {
+                          toast.error("Screenshot must be smaller than 5 MB");
+                          e.target.value = "";
+                          return;
+                        }
+                        setProof(file);
+                      }}
+                    />
+                    {proof && (
+                      <p className="flex items-center gap-2 text-xs text-success">
+                        <ImageUp className="size-3.5" /> {proof.name} ready to upload
+                      </p>
+                    )}
+                    {order.proof_path && !proof && (
+                      <p className="text-xs text-muted-foreground">A screenshot is already attached to this order.</p>
+                    )}
+                  </div>
+
+                  <Button type="submit" variant="gold" className="w-full sm:w-auto" disabled={utrLocked}>
+                    {utrMutation.isPending ? <Loader2 className="animate-spin" /> : <Send />}{" "}
+                    {uploading
+                      ? "Uploading screenshot…"
+                      : justSubmitted
+                        ? "Submitted — awaiting admin review"
+                        : "Submit reference"}
                   </Button>
                 </form>
               </div>
@@ -286,5 +322,87 @@ function StatusPill({ status }: { status: "pending" | "completed" | "rejected" }
     <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${className}`}>
       <Icon className="size-4" /> {label}
     </span>
+  );
+}
+
+type TimelineOrder = {
+  payment_status: "pending" | "completed" | "rejected";
+  utr: string | null;
+  created_at: string;
+  approved_at: string | null;
+  rejected_at: string | null;
+};
+
+function Timeline({ order }: { order: TimelineOrder }) {
+  const utrDone = Boolean(order.utr);
+  const approved = order.payment_status === "completed";
+  const rejected = order.payment_status === "rejected";
+
+  const steps = [
+    {
+      label: "Pending UPI payment",
+      hint: `Order created ${dateTime(order.created_at)}`,
+      state: "done" as const,
+    },
+    {
+      label: "UTR submitted",
+      hint: utrDone ? `Reference ${order.utr}` : "Waiting for your payment reference",
+      state: utrDone ? ("done" as const) : ("current" as const),
+    },
+    {
+      label: rejected ? "Rejected by admin" : "Approved by admin",
+      hint: approved
+        ? `Verified ${order.approved_at ? dateTime(order.approved_at) : ""}`
+        : rejected
+          ? `Rejected ${order.rejected_at ? dateTime(order.rejected_at) : ""}`
+          : utrDone
+            ? "Admin is verifying your payment"
+            : "Starts once your reference is submitted",
+      state: approved ? ("done" as const) : rejected ? ("failed" as const) : utrDone ? ("current" as const) : ("todo" as const),
+    },
+  ];
+
+  return (
+    <div className="mt-8 rounded-3xl bg-muted/40 p-6">
+      <h3 className="font-display text-lg font-bold">Payment status</h3>
+      <ol className="mt-5 space-y-5">
+        {steps.map((step, index) => (
+          <li key={step.label} className="flex gap-4">
+            <div className="flex flex-col items-center">
+              <span
+                className={`flex size-8 items-center justify-center rounded-full ${
+                  step.state === "done"
+                    ? "bg-success/20 text-success"
+                    : step.state === "failed"
+                      ? "bg-destructive/20 text-destructive"
+                      : step.state === "current"
+                        ? "bg-highlight/20 text-highlight"
+                        : "bg-card text-muted-foreground"
+                }`}
+              >
+                {step.state === "done" ? (
+                  <CheckCircle2 className="size-4" />
+                ) : step.state === "failed" ? (
+                  <XCircle className="size-4" />
+                ) : (
+                  <Clock className="size-4" />
+                )}
+              </span>
+              {index < steps.length - 1 && <span className="mt-1 h-8 w-px bg-border/70" />}
+            </div>
+            <div className="pt-1">
+              <p
+                className={`text-sm font-bold ${
+                  step.state === "todo" ? "text-muted-foreground" : step.state === "failed" ? "text-destructive" : ""
+                }`}
+              >
+                {step.label}
+              </p>
+              <p className="text-xs text-muted-foreground">{step.hint}</p>
+            </div>
+          </li>
+        ))}
+      </ol>
+    </div>
   );
 }
