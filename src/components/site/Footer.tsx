@@ -8,9 +8,6 @@ export function Footer() {
       <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-14 sm:px-6 md:grid-cols-4">
         <div className="md:col-span-1">
           <Logo />
-          <p className="mt-4 max-w-xs text-sm text-muted-foreground">
-            Premium access to the Telugu-Toon-World private Telegram cartoon community.
-          </p>
         </div>
 
         <div>
