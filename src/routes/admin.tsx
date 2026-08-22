@@ -332,6 +332,17 @@ function OrdersTab() {
                     {order.coupon_code ? ` · coupon ${order.coupon_code}` : ""} · {dateTime(order.created_at)}
                   </p>
                   <p className="mt-1 text-xs font-semibold text-highlight">UTR: {order.utr ?? "not submitted"}</p>
+                  {order.proof_path && (
+                    <Button
+                      size="sm"
+                      variant="glass"
+                      className="mt-2"
+                      onClick={() => proofMutation.mutate({ orderId: order.id })}
+                      disabled={proofMutation.isPending}
+                    >
+                      <ImageUp /> View payment proof
+                    </Button>
+                  )}
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold capitalize text-muted-foreground">{order.payment_status}</span>
