@@ -85,7 +85,7 @@ function CheckoutPage() {
   });
 
   const orderMutation = useMutation({
-    mutationFn: () =>
+    mutationFn: (_opts: { appScheme?: string }) =>
       createOrder({
         data: {
           planId: plan!.id,
@@ -95,12 +95,31 @@ function CheckoutPage() {
           phone: form.phone.trim(),
         },
       }),
-    onSuccess: (order) => {
+    onSuccess: (order, variables) => {
+      const target = { to: "/payment-status" as const, search: { ref: order.order_ref, email: order.customer_email } };
+      if (variables.appScheme) {
+        const link = buildUpiLink(variables.appScheme, order.order_ref);
+        toast.success("Opening your UPI app — come back and enter the UTR after paying.");
+        window.location.href = link;
+        window.setTimeout(() => navigate(target), 1200);
+        return;
+      }
       toast.success("Order created. Submit your payment reference next.");
-      navigate({ to: "/payment-status", search: { ref: order.order_ref, email: order.customer_email } });
+      navigate(target);
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not create order"),
   });
+
+  function buildUpiLink(scheme: string, note: string) {
+    const params = new URLSearchParams({
+      pa: upiId,
+      pn: "Telugu-Toon-World",
+      am: String(amountDue),
+      cu: "INR",
+      tn: `${plan!.name} ${note}`,
+    });
+    return `${scheme}${params.toString()}`;
+  }
 
   if (!plan) {
     return (
@@ -116,15 +135,26 @@ function CheckoutPage() {
     );
   }
 
-  function submit(event: React.FormEvent) {
-    event.preventDefault();
+  function validDetails() {
     const parsed = formSchema.safeParse(form);
     if (!parsed.success) {
       toast.error(parsed.error.issues[0]?.message ?? "Please check your details");
-      return;
+      return false;
     }
-    orderMutation.mutate();
+    return true;
   }
+
+  function submit(event: React.FormEvent) {
+    event.preventDefault();
+    if (!validDetails()) return;
+    orderMutation.mutate({});
+  }
+
+  function payWithApp(scheme: string) {
+    if (!validDetails()) return;
+    orderMutation.mutate({ appScheme: scheme });
+  }
+
 
   return (
     <SiteLayout>
