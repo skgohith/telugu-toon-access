@@ -1,5 +1,5 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
-import { LayoutDashboard, LogOut, Menu, ShieldCheck, Sparkles, User as UserIcon, X } from "lucide-react";
+import { LogOut, Menu, ShieldCheck, Sparkles, User as UserIcon, X } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
@@ -21,7 +21,7 @@ const LINKS = [
   { to: "/", label: "Home" },
   { to: "/plans", label: "Plans" },
   { to: "/about", label: "About" },
-  { to: "/dashboard", label: "Dashboard" },
+  { to: "/payment-status", label: "Track Order" },
 ] as const;
 
 export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
@@ -75,11 +75,6 @@ export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel className="truncate text-xs text-muted-foreground">{user.email}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/dashboard">
-                    <LayoutDashboard className="size-4" /> Dashboard
-                  </Link>
-                </DropdownMenuItem>
                 {isAdmin && (
                   <DropdownMenuItem asChild>
                     <Link to="/admin">
@@ -93,11 +88,7 @@ export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          ) : (
-            <Button asChild variant="glass" size="sm" className="hidden md:inline-flex">
-              <Link to="/auth">Sign in</Link>
-            </Button>
-          )}
+          ) : null}
 
           <Button
             variant="glass"
@@ -124,15 +115,6 @@ export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
                 {link.label}
               </Link>
             ))}
-            {!user && (
-              <Link
-                to="/auth"
-                onClick={() => setOpen(false)}
-                className="rounded-xl px-3 py-3 text-sm font-semibold text-muted-foreground hover:bg-accent hover:text-foreground"
-              >
-                Sign in
-              </Link>
-            )}
             <Button asChild variant="hero" className="mt-2">
               <Link to="/plans" onClick={() => setOpen(false)}>
                 <Sparkles /> Get Access

@@ -10,9 +10,8 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useAuth } from "@/hooks/useAuth";
 import { inr } from "@/lib/format";
-import { createOrder, getPaymentDetails, listPlans, myProfile, validateCoupon } from "@/lib/store.functions";
+import { createOrder, getPaymentDetails, listPlans, validateCoupon } from "@/lib/store.functions";
 
 const searchSchema = z.object({ planId: z.string().optional() });
 
@@ -47,11 +46,9 @@ type CouponState = {
 function CheckoutPage() {
   const { planId } = Route.useSearch();
   const navigate = useNavigate();
-  const { user, loading } = useAuth();
 
   const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
   const { data: payment } = useQuery({ queryKey: ["payment-details"], queryFn: () => getPaymentDetails() });
-  const { data: me } = useQuery({ queryKey: ["me", user?.id], queryFn: () => myProfile(), enabled: Boolean(user) });
 
   const plan = useMemo(() => (plans ?? []).find((p) => p.id === planId) ?? null, [plans, planId]);
 
@@ -59,24 +56,6 @@ function CheckoutPage() {
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<CouponState | null>(null);
   const [qr, setQr] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (!loading && !user) {
-      navigate({ to: "/auth", search: { redirect: planId ? `/checkout?planId=${planId}` : "/checkout" } });
-    }
-  }, [loading, user, navigate, planId]);
-
-  useEffect(() => {
-    if (me?.profile) {
-      setForm((prev) => ({
-        name: prev.name || me.profile?.name || "",
-        email: prev.email || me.profile?.email || user?.email || "",
-        phone: prev.phone || me.profile?.phone || "",
-      }));
-    } else if (user?.email) {
-      setForm((prev) => ({ ...prev, email: prev.email || user.email! }));
-    }
-  }, [me, user]);
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
@@ -118,7 +97,7 @@ function CheckoutPage() {
       }),
     onSuccess: (order) => {
       toast.success("Order created. Submit your payment reference next.");
-      navigate({ to: "/payment-status", search: { orderId: order.id } });
+      navigate({ to: "/payment-status", search: { ref: order.order_ref, email: order.customer_email } });
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not create order"),
   });
