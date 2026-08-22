@@ -74,6 +74,7 @@
 }
 
 :root {
+  color-scheme: dark;
   --radius: 1.1rem;
 
   --background: oklch(0.16 0.045 268);
@@ -171,6 +172,41 @@
   .font-display {
     font-family: var(--font-display);
     letter-spacing: -0.01em;
+  }
+
+  /* Native controls: keep them readable on the dark surface */
+  select,
+  option,
+  optgroup {
+    background-color: var(--color-card);
+    color: var(--color-card-foreground);
+  }
+
+  select:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 2px var(--color-ring);
+  }
+
+  input,
+  textarea {
+    color: var(--color-foreground);
+  }
+
+  input::placeholder,
+  textarea::placeholder {
+    color: var(--color-muted-foreground);
+  }
+
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator {
+    filter: invert(1) brightness(1.6);
+    opacity: 0.75;
+    cursor: pointer;
+  }
+
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    filter: invert(1) brightness(1.6);
   }
 }
 
