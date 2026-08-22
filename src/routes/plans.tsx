@@ -69,7 +69,7 @@ function PlansPage() {
 
                 <div className="mt-6 flex items-end gap-2">
                   <span className="text-5xl font-extrabold text-gradient">{inr(plan.price)}</span>
-                  <span className="pb-2 text-sm text-muted-foreground">/ {plan.duration_label}</span>
+                  <span className="pb-2 text-sm text-muted-foreground">/ {"\u00a0"}Lifetime</span>
                 </div>
 
                 <ul className="mt-7 space-y-3 text-sm">
