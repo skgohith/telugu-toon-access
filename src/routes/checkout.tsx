@@ -65,6 +65,7 @@ function CheckoutPage() {
   const [qr, setQr] = useState<string | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   const [openingApp, setOpeningApp] = useState<string | null>(null);
+  const [submitted, setSubmitted] = useState(false);
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
@@ -105,6 +106,7 @@ function CheckoutPage() {
         },
       }),
     onSuccess: (order, variables) => {
+      setSubmitted(true);
       const target = { to: "/payment-status" as const, search: { ref: order.order_ref, email: order.customer_email } };
       if (variables.appScheme) {
         const link = buildUpiLink(variables.appScheme, order.order_ref);
@@ -120,6 +122,7 @@ function CheckoutPage() {
     },
     onError: (error) => {
       setOpeningApp(null);
+      setSubmitted(false);
       toast.error(error instanceof Error ? error.message : "Could not create order");
     },
   });
@@ -158,13 +161,17 @@ function CheckoutPage() {
     return true;
   }
 
+  const locked = orderMutation.isPending || submitted;
+
   function submit(event: React.FormEvent) {
     event.preventDefault();
+    if (locked) return;
     if (!validDetails()) return;
     orderMutation.mutate({});
   }
 
   function payWithApp(scheme: string, label: string) {
+    if (locked) return;
     if (!validDetails()) return;
     setOpeningApp(label);
     orderMutation.mutate({ appScheme: scheme });
@@ -237,7 +244,7 @@ function CheckoutPage() {
                     type="button"
                     variant="glass"
                     onClick={() => couponCode.trim().length >= 2 && couponMutation.mutate()}
-                    disabled={couponMutation.isPending}
+                    disabled={couponMutation.isPending || locked}
                   >
                     {couponMutation.isPending ? <Loader2 className="animate-spin" /> : <TicketPercent />} Apply
                   </Button>
@@ -251,8 +258,9 @@ function CheckoutPage() {
             </div>
 
             {hasPaid ? (
-              <Button type="submit" variant="hero" size="lg" className="mt-7 w-full" disabled={orderMutation.isPending}>
-                {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />} I have paid — continue
+              <Button type="submit" variant="hero" size="lg" className="mt-7 w-full" disabled={locked}>
+                {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
+                {submitted ? "Order created — redirecting…" : "I have paid — continue"}
               </Button>
             ) : (
               <div className="mt-7 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
@@ -336,7 +344,7 @@ function CheckoutPage() {
                         type="button"
                         variant="glass"
                         className="justify-start"
-                        disabled={orderMutation.isPending}
+                        disabled={locked}
                         onClick={() => payWithApp(app.scheme, app.label)}
                       >
                         {isOpening ? <Loader2 className="animate-spin" /> : <Smartphone />} {app.label}
