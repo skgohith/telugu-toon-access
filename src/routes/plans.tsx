@@ -1,22 +1,15 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { Check, Crown, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
 import { SectionHeading, SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { inr } from "@/lib/format";
-import { listPlans } from "@/lib/store.functions";
+import { plansQueryOptions } from "@/lib/plans";
 import { cn } from "@/lib/utils";
 
-const plansQueryOptions = queryOptions({
-  queryKey: ["plans"],
-  queryFn: () => listPlans(),
-  staleTime: 60_000,
-});
-
 export const Route = createFileRoute("/plans")({
-  loader: ({ context }) => context.queryClient.ensureQueryData(plansQueryOptions),
   head: () => ({
     meta: [
       { title: "Premium Plans — Telugu-Toon-World" },
@@ -87,7 +80,7 @@ export const Route = createFileRoute("/plans")({
 
 function PlansPage() {
   const navigate = useNavigate();
-  const { data: plans } = useSuspenseQuery(plansQueryOptions);
+  const { data: plans = [] } = useQuery(plansQueryOptions);
 
   function choose(planId: string) {
     navigate({ to: "/checkout", search: { planId } });
