@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { Copy, ImageUp, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
+import { Copy, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -9,7 +9,6 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { inr } from "@/lib/format";
 import { createOrder, getPaymentDetails, submitUtr, validateCoupon } from "@/lib/store.api";
 
@@ -69,7 +68,6 @@ function CheckoutPage() {
   const [openingApp, setOpeningApp] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [utr, setUtr] = useState("");
-  const [proof, setProof] = useState<File | null>(null);
   const [stage, setStage] = useState<string | null>(null);
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
@@ -106,18 +104,9 @@ function CheckoutPage() {
         },
       });
 
-      setStage("Uploading your payment screenshot…");
-      const ext = (proof!.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
-      const path = `${order.order_ref}/${Date.now()}.${ext || "jpg"}`;
-      const { error } = await supabase.storage.from("payment-proofs").upload(path, proof!, {
-        contentType: proof!.type || "image/jpeg",
-        upsert: true,
-      });
-      if (error) toast.warning("Screenshot upload failed — your reference is still being submitted.");
-
       setStage("Submitting your payment reference…");
       await submitUtr({
-        data: { orderRef: order.order_ref, email: order.customer_email, utr: utr.trim(), proofPath: error ? null : path },
+        data: { orderRef: order.order_ref, email: order.customer_email, utr: utr.trim(), proofPath: null },
       });
 
       return order;
@@ -183,10 +172,6 @@ function CheckoutPage() {
       toast.error("Enter the correct UTR / transaction reference (at least 6 characters)");
       return;
     }
-    if (!proof) {
-      toast.error("Attach a screenshot of your successful payment");
-      return;
-    }
     orderMutation.mutate();
   }
 
@@ -195,7 +180,7 @@ function CheckoutPage() {
     if (locked) return;
     setOpeningApp(label);
     window.location.href = buildUpiLink(scheme);
-    toast.success(`Opening ${label} — after paying, come back here and enter your UTR and screenshot.`);
+    toast.success(`Opening ${label} — after paying, come back here and enter your UTR.`);
     window.setTimeout(() => setOpeningApp(null), 4000);
   }
 
@@ -209,7 +194,7 @@ function CheckoutPage() {
           Complete your <span className="text-gradient">purchase</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Step 1 — pay via UPI. Step 2 — tick that you have paid. Step 3 — enter your UTR and payment screenshot to submit.
+          Step 1 — pay via UPI. Step 2 — tick that you have paid. Step 3 — enter your UTR to submit.
         </p>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -308,7 +293,7 @@ function CheckoutPage() {
                 <div>
                   <h3 className="font-display text-lg font-bold text-highlight">Confirm your payment</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Your order is created only after you enter the UTR and attach the payment screenshot.
+                    Your order is created only after you enter the UTR.
                   </p>
                 </div>
                 <div className="space-y-2">
@@ -329,7 +314,7 @@ function CheckoutPage() {
               </div>
             ) : (
               <div className="mt-4 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
-                Complete the UPI payment above, then tick “I have completed the payment” to enter your UTR and screenshot
+                Complete the UPI payment above, then tick “I have completed the payment” to enter your UTR
               </div>
             )}
 
@@ -397,7 +382,7 @@ function CheckoutPage() {
               <div className="mt-6 border-t border-border/60 pt-5 text-left">
                 <p className="text-sm font-bold">Pay with a UPI app</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  On mobile, tap an app to open it with the amount pre-filled. You stay on this page — come back and enter your UTR and screenshot.
+                  On mobile, tap an app to open it with the amount pre-filled. You stay on this page — come back and enter your UTR.
                 </p>
                 <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {UPI_APPS.map((app) => {
@@ -419,8 +404,7 @@ function CheckoutPage() {
               </div>
 
               <p className="mt-4 text-xs text-muted-foreground">
-                After paying, tick “I have completed the payment” below and submit your UTR / reference number with a
-                screenshot — the admin then approves or rejects it.
+                After paying, tick “I have completed the payment” below and submit your UTR / reference number — the admin then approves or rejects it.
               </p>
 
 
