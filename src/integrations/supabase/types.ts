@@ -270,12 +270,56 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_clear_data: {
+        Args: { p_confirm: string; p_scope: string }
+        Returns: Json
+      }
+      admin_set_order_status: {
+        Args: { p_order_id: string; p_status: string }
+        Returns: Json
+      }
+      get_upi_id: { Args: never; Returns: string }
+      guest_create_order: {
+        Args: {
+          p_coupon_code: string
+          p_email: string
+          p_name: string
+          p_phone: string
+          p_plan_id: string
+        }
+        Returns: Json
+      }
+      guest_submit_utr: {
+        Args: {
+          p_email: string
+          p_order_ref: string
+          p_proof_path?: string
+          p_utr: string
+        }
+        Returns: Json
+      }
+      guest_telegram_access: {
+        Args: { p_email: string; p_order_ref: string }
+        Returns: Json
+      }
+      guest_track_order: {
+        Args: { p_email: string; p_order_ref: string }
+        Returns: Json
+      }
+      guest_validate_coupon: {
+        Args: { p_code: string; p_plan_id: string }
+        Returns: Json
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
           _user_id: string
         }
         Returns: boolean
+      }
+      order_public_json: {
+        Args: { o: Database["public"]["Tables"]["orders"]["Row"] }
+        Returns: Json
       }
     }
     Enums: {
