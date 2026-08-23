@@ -11,7 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { inr } from "@/lib/format";
-import { createOrder, getPaymentDetails, validateCoupon } from "@/lib/store.functions";
+import { createOrder, getPaymentDetails, validateCoupon } from "@/lib/store.api";
 import { plansQueryOptions } from "@/lib/plans";
 
 const searchSchema = z.object({ planId: z.string().optional() });

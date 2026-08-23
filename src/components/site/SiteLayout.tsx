@@ -5,7 +5,7 @@ import { CartoonBackdrop } from "@/components/site/CartoonBackdrop";
 import { Footer } from "@/components/site/Footer";
 import { Navbar } from "@/components/site/Navbar";
 import { useAuth } from "@/hooks/useAuth";
-import { myProfile } from "@/lib/store.functions";
+import { myProfile } from "@/lib/store.api";
 
 export function SiteLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();

@@ -11,7 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { dateTime, inr } from "@/lib/format";
-import { getTelegramAccess, submitUtr, trackOrder } from "@/lib/store.functions";
+import { getTelegramAccess, submitUtr, trackOrder } from "@/lib/store.api";
 
 const searchSchema = z.object({
   ref: z.string().optional(),
