@@ -27,7 +27,19 @@ export const Route = createFileRoute("/plans")({
 
 function PlansPage() {
   const navigate = useNavigate();
-  const { data: plans, isLoading } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
+  const {
+    data: plans,
+    isPending,
+    isError,
+    isFetching,
+    refetch,
+  } = useQuery({
+    queryKey: ["plans"],
+    queryFn: () => listPlans(),
+    retry: 2,
+    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
+    staleTime: 60_000,
+  });
 
   function choose(planId: string) {
     navigate({ to: "/checkout", search: { planId } });
