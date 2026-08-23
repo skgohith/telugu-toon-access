@@ -423,7 +423,7 @@ function CheckoutPage() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   On mobile, tap an app to open it with the amount pre-filled. You stay on this page — come back and enter your UTR and screenshot.
                 </p>
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {UPI_APPS.map((app) => {
                     const isOpening = openingApp === app.label;
                     return (
@@ -431,7 +431,7 @@ function CheckoutPage() {
                         key={app.label}
                         type="button"
                         variant="glass"
-                        className="justify-start"
+                        className="w-full justify-start"
                         disabled={locked}
                         onClick={() => payWithApp(app.scheme, app.label)}
                       >
@@ -442,22 +442,11 @@ function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="mt-5 flex items-start gap-3 rounded-2xl bg-card p-4 text-left">
-                <input
-                  type="checkbox"
-                  id="has-paid"
-                  checked={hasPaid}
-                  onChange={(e) => setHasPaid(e.target.checked)}
-                  className="mt-0.5 size-4 accent-highlight"
-                />
-                <label htmlFor="has-paid" className="cursor-pointer text-sm leading-snug">
-                  I have completed the payment
-                </label>
-              </div>
-
               <p className="mt-4 text-xs text-muted-foreground">
-                After paying, submit your 12-digit UTR / reference number — the admin then approves or rejects it.
+                After paying, tick “I have completed the payment” below and submit your UTR / reference number with a
+                screenshot — the admin then approves or rejects it.
               </p>
+
 
             </div>
           </div>
