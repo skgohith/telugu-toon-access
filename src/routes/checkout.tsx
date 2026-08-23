@@ -307,11 +307,19 @@ function CheckoutPage() {
                     value={utr}
                     maxLength={40}
                     placeholder="e.g. 402312345678"
-                    onChange={(e) => setUtr(e.target.value.toUpperCase())}
+                    aria-invalid={utr.length > 0 && !utrCheck.ok}
+                    aria-describedby="utr-help"
+                    onChange={(e) => setUtr(normalizeUtr(e.target.value))}
                     disabled={locked}
                   />
+                  <p
+                    id="utr-help"
+                    className={`text-xs ${utr.length > 0 && !utrCheck.ok ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    {utr.length > 0 && !utrCheck.ok ? utrCheck.message : `${UTR_HINT}. Each UTR can be used only once.`}
+                  </p>
                 </div>
-                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={locked}>
+                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={locked || !utrCheck.ok}>
                   {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
                   {stage ?? (submitted ? "Submitted — redirecting…" : "Submit payment details")}
                 </Button>
@@ -321,6 +329,7 @@ function CheckoutPage() {
                 Complete the UPI payment above, then tick “I have completed the payment” to enter your UTR
               </div>
             )}
+
 
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
