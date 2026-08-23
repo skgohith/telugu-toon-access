@@ -85,6 +85,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         content: "Premium access to the Telugu-Toon-World private Telegram cartoon community.",
       },
       { name: "author", content: "Telugu-Toon-World" },
+      {
+        name: "google-site-verification",
+        content: "B6DA3wGsviBlAyMHhpRDpv2pFu54jMXey-ZzulUs-r8",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
