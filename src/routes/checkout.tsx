@@ -13,7 +13,7 @@ import { inr } from "@/lib/format";
 import { createOrder, getPaymentDetails, submitUtr, validateCoupon } from "@/lib/store.api";
 
 import { plansQueryOptions } from "@/lib/plans";
-import upiQr from "@/assets/upi-qr.jpg.asset.json";
+import upiQr from "@/assets/upi-qr.jpg";
 
 const searchSchema = z.object({ planId: z.string().optional() });
 
@@ -357,7 +357,7 @@ function CheckoutPage() {
               <h2 className="font-display text-xl font-bold">Pay via UPI</h2>
               <p className="mt-1 text-xs text-muted-foreground">Scan the QR or pay to the UPI ID below.</p>
               <img
-                src={upiQr.url}
+                src={upiQr}
                 alt={`UPI QR code for BOLLOJI HEMANTH (${upiId}) — scan to pay ${inr(amountDue)}`}
                 className="mx-auto mt-5 w-52 rounded-3xl bg-card p-2"
                 loading="lazy"
