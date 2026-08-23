@@ -153,6 +153,7 @@ function CheckoutPage() {
   }
 
   const locked = orderMutation.isPending || submitted;
+  const utrCheck = validateUtr(utr);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -162,10 +163,16 @@ function CheckoutPage() {
       toast.error("Confirm that you have completed the UPI payment");
       return;
     }
-    if (!/^[A-Za-z0-9-]{6,40}$/.test(utr.trim())) {
-      toast.error("Enter the correct UTR / transaction reference (at least 6 characters)");
+    if (!utrCheck.ok) {
+      toast.error(utrCheck.message);
       return;
     }
+    // Guard against the same reference being submitted twice from this page.
+    if (attemptedUtrs.includes(utrCheck.utr)) {
+      toast.error("You already submitted this UTR. Track your order instead of sending it again.");
+      return;
+    }
+    setAttemptedUtrs((prev) => [...prev, utrCheck.utr]);
     orderMutation.mutate();
   }
 
@@ -177,6 +184,7 @@ function CheckoutPage() {
     toast.success(`Opening ${label} — after paying, come back here and enter your UTR.`);
     window.setTimeout(() => setOpeningApp(null), 4000);
   }
+
 
 
 
