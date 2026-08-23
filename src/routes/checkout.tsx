@@ -13,7 +13,9 @@ import { inr } from "@/lib/format";
 import { createPaidOrder, getPaymentDetails, validateCoupon } from "@/lib/store.api";
 
 import { plansQueryOptions } from "@/lib/plans";
+import { UTR_HINT, normalizeUtr, validateUtr } from "@/lib/utr";
 import upiQr from "@/assets/upi-qr.jpg";
+
 
 const searchSchema = z.object({ planId: z.string().optional() });
 
@@ -68,7 +70,9 @@ function CheckoutPage() {
   const [openingApp, setOpeningApp] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [utr, setUtr] = useState("");
+  const [attemptedUtrs, setAttemptedUtrs] = useState<string[]>([]);
   const [stage, setStage] = useState<string | null>(null);
+
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
@@ -153,6 +157,7 @@ function CheckoutPage() {
   }
 
   const locked = orderMutation.isPending || submitted;
+  const utrCheck = validateUtr(utr);
 
   function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -162,10 +167,16 @@ function CheckoutPage() {
       toast.error("Confirm that you have completed the UPI payment");
       return;
     }
-    if (!/^[A-Za-z0-9-]{6,40}$/.test(utr.trim())) {
-      toast.error("Enter the correct UTR / transaction reference (at least 6 characters)");
+    if (!utrCheck.ok) {
+      toast.error(utrCheck.message);
       return;
     }
+    // Guard against the same reference being submitted twice from this page.
+    if (attemptedUtrs.includes(utrCheck.utr)) {
+      toast.error("You already submitted this UTR. Track your order instead of sending it again.");
+      return;
+    }
+    setAttemptedUtrs((prev) => [...prev, utrCheck.utr]);
     orderMutation.mutate();
   }
 
@@ -177,6 +188,7 @@ function CheckoutPage() {
     toast.success(`Opening ${label} — after paying, come back here and enter your UTR.`);
     window.setTimeout(() => setOpeningApp(null), 4000);
   }
+
 
 
 
@@ -297,11 +309,19 @@ function CheckoutPage() {
                     value={utr}
                     maxLength={40}
                     placeholder="e.g. 402312345678"
-                    onChange={(e) => setUtr(e.target.value.toUpperCase())}
+                    aria-invalid={utr.length > 0 && !utrCheck.ok}
+                    aria-describedby="utr-help"
+                    onChange={(e) => setUtr(normalizeUtr(e.target.value))}
                     disabled={locked}
                   />
+                  <p
+                    id="utr-help"
+                    className={`text-xs ${utr.length > 0 && !utrCheck.ok ? "text-destructive" : "text-muted-foreground"}`}
+                  >
+                    {utr.length > 0 && !utrCheck.ok ? utrCheck.message : `${UTR_HINT}. Each UTR can be used only once.`}
+                  </p>
                 </div>
-                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={locked}>
+                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={locked || !utrCheck.ok}>
                   {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
                   {stage ?? (submitted ? "Submitted — redirecting…" : "Submit payment details")}
                 </Button>
@@ -311,6 +331,7 @@ function CheckoutPage() {
                 Complete the UPI payment above, then tick “I have completed the payment” to enter your UTR
               </div>
             )}
+
 
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
