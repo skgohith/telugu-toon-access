@@ -39,7 +39,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { dateOnly, dateTime, inr } from "@/lib/format";
-import { myProfile } from "@/lib/store.functions";
+import { myProfile } from "@/lib/store.api";
 import {
   type AdminCoupon,
   adminClearData,
@@ -51,7 +51,7 @@ import {
   adminProofUrl,
   adminSaveCoupon,
   adminSetOrderStatus,
-} from "@/lib/admin.functions";
+} from "@/lib/admin.api";
 
 export const Route = createFileRoute("/admin")({
   head: () => ({

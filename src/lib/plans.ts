@@ -1,7 +1,7 @@
 import { queryOptions } from "@tanstack/react-query";
 
 import { supabase } from "@/integrations/supabase/client";
-import { listPlans, type PublicPlan } from "@/lib/store.functions";
+import { listPlans, type PublicPlan } from "@/lib/store.api";
 
 const PLAN_COLUMNS =
   "id, name, price, duration_days, duration_label, description, features, recommended, active, sort_order";
