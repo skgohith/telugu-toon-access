@@ -68,7 +68,9 @@ function CheckoutPage() {
   const [openingApp, setOpeningApp] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
   const [utr, setUtr] = useState("");
+  const [attemptedUtrs, setAttemptedUtrs] = useState<string[]>([]);
   const [stage, setStage] = useState<string | null>(null);
+
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
