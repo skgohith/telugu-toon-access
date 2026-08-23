@@ -13,7 +13,9 @@ import { inr } from "@/lib/format";
 import { createPaidOrder, getPaymentDetails, validateCoupon } from "@/lib/store.api";
 
 import { plansQueryOptions } from "@/lib/plans";
+import { UTR_HINT, normalizeUtr, validateUtr } from "@/lib/utr";
 import upiQr from "@/assets/upi-qr.jpg";
+
 
 const searchSchema = z.object({ planId: z.string().optional() });
 
