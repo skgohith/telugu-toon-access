@@ -322,31 +322,6 @@ function CheckoutPage() {
                     disabled={locked}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="proof">Payment screenshot</Label>
-                  <Input
-                    id="proof"
-                    type="file"
-                    accept="image/*"
-                    disabled={locked}
-                    className="h-auto py-2 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-semibold"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0] ?? null;
-                      if (file && file.size > 5 * 1024 * 1024) {
-                        toast.error("Screenshot must be smaller than 5 MB");
-                        e.target.value = "";
-                        setProof(null);
-                        return;
-                      }
-                      setProof(file);
-                    }}
-                  />
-                  {proof && (
-                    <p className="flex items-center gap-2 text-xs font-semibold text-success">
-                      <ImageUp className="size-3.5" /> {proof.name} ready to upload
-                    </p>
-                  )}
-                </div>
                 <Button type="submit" variant="hero" size="lg" className="w-full" disabled={locked}>
                   {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
                   {stage ?? (submitted ? "Submitted — redirecting…" : "Submit payment details")}
