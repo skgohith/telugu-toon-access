@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { Check, Crown, Loader2, Sparkles } from "lucide-react";
+import { queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { Check, Crown, Sparkles } from "lucide-react";
 import { motion } from "motion/react";
 
 import { SectionHeading, SiteLayout } from "@/components/site/SiteLayout";
@@ -9,7 +9,14 @@ import { inr } from "@/lib/format";
 import { listPlans } from "@/lib/store.functions";
 import { cn } from "@/lib/utils";
 
+const plansQueryOptions = queryOptions({
+  queryKey: ["plans"],
+  queryFn: () => listPlans(),
+  staleTime: 60_000,
+});
+
 export const Route = createFileRoute("/plans")({
+  loader: ({ context }) => context.queryClient.ensureQueryData(plansQueryOptions),
   head: () => ({
     meta: [
       { title: "Premium Plans — Telugu-Toon-World" },
@@ -80,19 +87,7 @@ export const Route = createFileRoute("/plans")({
 
 function PlansPage() {
   const navigate = useNavigate();
-  const {
-    data: plans,
-    isPending,
-    isError,
-    isFetching,
-    refetch,
-  } = useQuery({
-    queryKey: ["plans"],
-    queryFn: () => listPlans(),
-    retry: 2,
-    retryDelay: (attempt) => Math.min(1000 * 2 ** attempt, 4000),
-    staleTime: 60_000,
-  });
+  const { data: plans } = useSuspenseQuery(plansQueryOptions);
 
   function choose(planId: string) {
     navigate({ to: "/checkout", search: { planId } });
@@ -107,23 +102,9 @@ function PlansPage() {
           subtitle="Pay securely via UPI, submit your reference number, and get Telegram access after admin verification."
         />
 
-        {isPending ? (
-          <div className="mt-16 flex justify-center">
-            <Loader2 className="size-6 animate-spin text-highlight" />
-          </div>
-        ) : isError || (plans ?? []).length === 0 ? (
-          <div className="glass mx-auto mt-14 max-w-md rounded-3xl p-8 text-center">
-            <h3 className="font-display text-xl font-extrabold">Plans couldn’t load</h3>
-            <p className="mt-2 text-sm text-muted-foreground">
-              Something went wrong while fetching our premium plans. Please try again.
-            </p>
-            <Button variant="hero" size="lg" className="mt-6 w-full" onClick={() => refetch()} disabled={isFetching}>
-              {isFetching ? <Loader2 className="animate-spin" /> : <Sparkles />} Retry
-            </Button>
-          </div>
-        ) : (
+        {plans.length > 0 && (
           <div className="mt-14 grid gap-6 md:grid-cols-2">
-            {(plans ?? []).map((plan, index) => (
+            {plans.map((plan, index) => (
               <motion.div
                 key={plan.id}
                 initial={{ opacity: 0, y: 24 }}
