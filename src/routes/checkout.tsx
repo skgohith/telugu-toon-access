@@ -88,8 +88,8 @@ function CheckoutPage() {
   });
 
   /**
-   * Nothing is stored until the payment reference + screenshot are supplied:
-   * the order row is created, the proof uploaded and the UTR attached in one go.
+   * Nothing is stored until the payment reference is supplied:
+   * the order row is created and the UTR attached in one go.
    */
   const orderMutation = useMutation({
     mutationFn: async () => {
@@ -175,7 +175,7 @@ function CheckoutPage() {
     orderMutation.mutate();
   }
 
-  /** Opens the chosen UPI app only — you stay on this page until the UTR + screenshot are entered. */
+  /** Opens the chosen UPI app only — you stay on this page until the UTR is entered. */
   function payWithApp(scheme: string, label: string) {
     if (locked) return;
     setOpeningApp(label);
