@@ -328,6 +328,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      is_valid_utr: { Args: { p_utr: string }; Returns: boolean }
       order_public_json: {
         Args: { o: Database["public"]["Tables"]["orders"]["Row"] }
         Returns: Json
