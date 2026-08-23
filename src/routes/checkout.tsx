@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { Copy, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
+import { Copy, ImageUp, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
 import QRCode from "qrcode";
 import { toast } from "sonner";
 import { z } from "zod";
@@ -10,8 +10,10 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { supabase } from "@/integrations/supabase/client";
 import { inr } from "@/lib/format";
-import { createOrder, getPaymentDetails, validateCoupon } from "@/lib/store.api";
+import { createOrder, getPaymentDetails, submitUtr, validateCoupon } from "@/lib/store.api";
+
 import { plansQueryOptions } from "@/lib/plans";
 
 const searchSchema = z.object({ planId: z.string().optional() });
