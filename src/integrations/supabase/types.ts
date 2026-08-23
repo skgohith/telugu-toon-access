@@ -289,6 +289,17 @@ export type Database = {
         }
         Returns: Json
       }
+      guest_create_paid_order: {
+        Args: {
+          p_coupon_code: string
+          p_email: string
+          p_name: string
+          p_phone: string
+          p_plan_id: string
+          p_utr: string
+        }
+        Returns: Json
+      }
       guest_submit_utr: {
         Args: {
           p_email: string
