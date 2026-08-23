@@ -219,7 +219,7 @@ function CheckoutPage() {
           Complete your <span className="text-gradient">purchase</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          Step 1 — pay via UPI. Step 2 — confirm you have paid. Step 3 — create your order and submit the UTR.
+          Step 1 — pay via UPI. Step 2 — tick that you have paid. Step 3 — enter your UTR and payment screenshot to submit.
         </p>
 
         <div className="mt-10 grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
@@ -411,11 +411,11 @@ function CheckoutPage() {
               <div className="mt-6 border-t border-border/60 pt-5 text-left">
                 <p className="text-sm font-bold">Pay with a UPI app</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  On mobile, tap an app to open it with the amount pre-filled. You will come back here to enter the UTR.
+                  On mobile, tap an app to open it with the amount pre-filled. You stay on this page — come back and enter your UTR and screenshot.
                 </p>
                 <div className="mt-4 grid grid-cols-2 gap-2">
                   {UPI_APPS.map((app) => {
-                    const isOpening = openingApp === app.label && orderMutation.isPending;
+                    const isOpening = openingApp === app.label;
                     return (
                       <Button
                         key={app.label}
