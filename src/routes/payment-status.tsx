@@ -167,42 +167,101 @@ function PaymentStatusPage() {
             <Timeline order={order} />
 
             {order.payment_status === "pending" && (
-              <div className="mt-8 rounded-3xl bg-highlight/10 p-6">
-                <h3 className="font-display text-lg font-bold text-highlight">Submit your payment reference</h3>
-                <p className="mt-1 text-sm text-muted-foreground">
-                  Enter the UTR / transaction reference from your UPI app. You can update it until the admin reviews
-                  your order.
-                </p>
+              <div className="mt-8 space-y-5 rounded-3xl bg-highlight/10 p-6">
+                <div className="flex items-start gap-3">
+                  <Clock className="mt-0.5 size-5 shrink-0 text-highlight" />
+                  <div>
+                    <h3 className="font-display text-lg font-bold text-highlight">
+                      {order.utr ? "Payment pending verification" : "Waiting for your payment reference"}
+                    </h3>
+                    <p className="mt-1 text-sm text-muted-foreground">
+                      {order.utr
+                        ? `We received UTR ${order.utr} for ${inr(order.final_amount)}. The admin now checks it against the UPI account.`
+                        : "Enter the UTR / transaction reference from your UPI app so the admin can verify your payment."}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="rounded-2xl bg-card/70 p-5">
+                  <p className="text-sm font-bold">What happens next</p>
+                  <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
+                    <li>1. The admin matches your UTR with the received UPI payment (usually within a few hours).</li>
+                    <li>2. This page updates on its own — keep your reference {order.order_ref} safe and revisit anytime.</li>
+                    <li>3. Once approved, a “Join Telegram channel” button appears here with your private invite.</li>
+                    <li>4. If something looks wrong, contact support with your order reference.</li>
+                  </ol>
+                  <div className="mt-4 flex flex-wrap gap-3">
+                    <Button asChild variant="glass" size="sm">
+                      <Link to="/support">Contact support</Link>
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="glass"
+                      size="sm"
+                      onClick={() => queryClient.invalidateQueries({ queryKey })}
+                      disabled={isFetching}
+                    >
+                      {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />} Refresh status
+                    </Button>
+                  </div>
+                </div>
+
                 <form
-                  className="mt-5 space-y-4"
+                  className="space-y-4"
                   onSubmit={(event) => {
                     event.preventDefault();
                     if (utrLocked) return;
-                    if (utr.trim().length < 6) {
-                      toast.error("UTR must be at least 6 characters");
+                    if (!utrCheck.ok) {
+                      toast.error(utrCheck.message);
                       return;
                     }
+                    if (utrCheck.utr === (order.utr ?? "").toUpperCase()) {
+                      toast.error("This UTR is already submitted for this order and is awaiting admin review.");
+                      return;
+                    }
+                    if (attemptedUtrs.includes(utrCheck.utr)) {
+                      toast.error("You already submitted this UTR — no need to send it again.");
+                      return;
+                    }
+                    setAttemptedUtrs((prev) => [...prev, utrCheck.utr]);
                     utrMutation.mutate();
                   }}
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="utr">UTR / transaction reference</Label>
+                    <Label htmlFor="utr">{order.utr ? "Correct your UTR (optional)" : "UTR / transaction reference"}</Label>
                     <Input
                       id="utr"
                       value={utr}
                       maxLength={40}
                       placeholder="e.g. 402312345678"
-                      onChange={(e) => setUtr(e.target.value.toUpperCase())}
+                      aria-invalid={utr.length > 0 && !utrCheck.ok}
+                      aria-describedby="status-utr-help"
+                      onChange={(e) => setUtr(normalizeUtr(e.target.value))}
+                      disabled={utrLocked}
                     />
+                    <p
+                      id="status-utr-help"
+                      className={`text-xs ${utr.length > 0 && !utrCheck.ok ? "text-destructive" : "text-muted-foreground"}`}
+                    >
+                      {utr.length > 0 && !utrCheck.ok
+                        ? utrCheck.message
+                        : `${UTR_HINT}. You can update it until the admin reviews your order.`}
+                    </p>
                   </div>
 
-                  <Button type="submit" variant="gold" className="w-full sm:w-auto" disabled={utrLocked}>
+                  <Button
+                    type="submit"
+                    variant="gold"
+                    className="w-full sm:w-auto"
+                    disabled={utrLocked || !utrCheck.ok}
+                  >
                     {utrMutation.isPending ? <Loader2 className="animate-spin" /> : <Send />}{" "}
                     {justSubmitted ? "Submitted — awaiting admin review" : "Submit reference"}
                   </Button>
                 </form>
               </div>
             )}
+
 
             {order.payment_status === "completed" && (
               <div className="mt-8 rounded-3xl bg-success/10 p-6 text-center">
