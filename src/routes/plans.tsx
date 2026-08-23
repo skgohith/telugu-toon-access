@@ -20,6 +20,59 @@ export const Route = createFileRoute("/plans")({
       },
       { property: "og:title", content: "Premium Plans — Telugu-Toon-World" },
       { property: "og:description", content: "Two simple premium plans with UPI payment and coupon support." },
+      { property: "og:url", content: "https://telugu-toon-access.lovable.app/plans" },
+      { property: "og:type", content: "product" },
+    ],
+    links: [{ rel: "canonical", href: "https://telugu-toon-access.lovable.app/plans" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "ItemList",
+          name: "Telugu-Toon-World Premium Plans",
+          itemListElement: [
+            {
+              "@type": "ListItem",
+              position: 1,
+              item: {
+                "@type": "Product",
+                name: "Lite Premium",
+                description:
+                  "Monthly access to the Telugu-Toon-World private Telegram cartoon community.",
+                category: "Digital subscription",
+                brand: { "@type": "Brand", name: "Telugu-Toon-World" },
+                offers: {
+                  "@type": "Offer",
+                  price: "149",
+                  priceCurrency: "INR",
+                  availability: "https://schema.org/InStock",
+                  url: "https://telugu-toon-access.lovable.app/plans",
+                },
+              },
+            },
+            {
+              "@type": "ListItem",
+              position: 2,
+              item: {
+                "@type": "Product",
+                name: "Max Premium",
+                description:
+                  "Lifetime access to the full Telugu-Toon-World private Telegram cartoon collection.",
+                category: "Digital subscription",
+                brand: { "@type": "Brand", name: "Telugu-Toon-World" },
+                offers: {
+                  "@type": "Offer",
+                  price: "499",
+                  priceCurrency: "INR",
+                  availability: "https://schema.org/InStock",
+                  url: "https://telugu-toon-access.lovable.app/plans",
+                },
+              },
+            },
+          ],
+        }),
+      },
     ],
   }),
   component: PlansPage,
