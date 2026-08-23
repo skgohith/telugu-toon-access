@@ -67,6 +67,9 @@ function CheckoutPage() {
   const [hasPaid, setHasPaid] = useState(false);
   const [openingApp, setOpeningApp] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [utr, setUtr] = useState("");
+  const [proof, setProof] = useState<File | null>(null);
+  const [stage, setStage] = useState<string | null>(null);
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
@@ -95,9 +98,14 @@ function CheckoutPage() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Coupon check failed"),
   });
 
+  /**
+   * Nothing is stored until the payment reference + screenshot are supplied:
+   * the order row is created, the proof uploaded and the UTR attached in one go.
+   */
   const orderMutation = useMutation({
-    mutationFn: (_opts: { appScheme?: string }) =>
-      createOrder({
+    mutationFn: async () => {
+      setStage("Creating your order…");
+      const order = await createOrder({
         data: {
           planId: plan!.id,
           couponCode: coupon?.code ?? null,
@@ -105,36 +113,43 @@ function CheckoutPage() {
           email: form.email.trim(),
           phone: form.phone.trim(),
         },
-      }),
-    onSuccess: (order, variables) => {
+      });
+
+      setStage("Uploading your payment screenshot…");
+      const ext = (proof!.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const path = `${order.order_ref}/${Date.now()}.${ext || "jpg"}`;
+      const { error } = await supabase.storage.from("payment-proofs").upload(path, proof!, {
+        contentType: proof!.type || "image/jpeg",
+        upsert: false,
+      });
+      if (error) throw new Error(`Could not upload the screenshot: ${error.message}`);
+
+      setStage("Submitting your payment reference…");
+      await submitUtr({
+        data: { orderRef: order.order_ref, email: order.customer_email, utr: utr.trim(), proofPath: path },
+      });
+      return order;
+    },
+    onSuccess: (order) => {
       setSubmitted(true);
-      const target = { to: "/payment-status" as const, search: { ref: order.order_ref, email: order.customer_email } };
-      if (variables.appScheme) {
-        const link = buildUpiLink(variables.appScheme, order.order_ref);
-        toast.success(`Opening ${openingApp ?? "your UPI app"} — complete the payment and return here to enter the UTR.`);
-        // Use assign for a clean redirect; give the device a few seconds to hand off to the app
-        // before switching the browser tab to the UTR submission page.
-        window.location.assign(link);
-        window.setTimeout(() => navigate(target), 3000);
-        return;
-      }
-      toast.success("Order created. Submit your payment reference next.");
-      navigate(target);
+      setStage(null);
+      toast.success("Payment details submitted — the admin will verify shortly.");
+      navigate({ to: "/payment-status", search: { ref: order.order_ref, email: order.customer_email } });
     },
     onError: (error) => {
-      setOpeningApp(null);
+      setStage(null);
       setSubmitted(false);
-      toast.error(error instanceof Error ? error.message : "Could not create order");
+      toast.error(error instanceof Error ? error.message : "Could not submit your payment");
     },
   });
 
-  function buildUpiLink(scheme: string, note: string) {
+  function buildUpiLink(scheme: string) {
     const params = new URLSearchParams({
       pa: upiId,
       pn: "Telugu-Toon-World",
       am: String(amountDue),
       cu: "INR",
-      tn: `${plan!.name} ${note}`,
+      tn: `${plan!.name} access`,
     });
     return `${scheme}${params.toString()}`;
   }
@@ -168,15 +183,31 @@ function CheckoutPage() {
     event.preventDefault();
     if (locked) return;
     if (!validDetails()) return;
-    orderMutation.mutate({});
+    if (!hasPaid) {
+      toast.error("Confirm that you have completed the UPI payment");
+      return;
+    }
+    if (!/^[A-Za-z0-9-]{6,40}$/.test(utr.trim())) {
+      toast.error("Enter the correct UTR / transaction reference (at least 6 characters)");
+      return;
+    }
+    if (!proof) {
+      toast.error("Attach a screenshot of your successful payment");
+      return;
+    }
+    orderMutation.mutate();
   }
 
+  /** Opens the chosen UPI app only — you stay on this page until the UTR + screenshot are entered. */
   function payWithApp(scheme: string, label: string) {
     if (locked) return;
-    if (!validDetails()) return;
     setOpeningApp(label);
-    orderMutation.mutate({ appScheme: scheme });
+    window.location.href = buildUpiLink(scheme);
+    toast.success(`Opening ${label} — after paying, come back here and enter your UTR and screenshot.`);
+    window.setTimeout(() => setOpeningApp(null), 4000);
   }
+
+
 
 
   return (
