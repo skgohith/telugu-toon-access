@@ -54,9 +54,19 @@ function PlansPage() {
           subtitle="Pay securely via UPI, submit your reference number, and get Telegram access after admin verification."
         />
 
-        {isLoading ? (
+        {isPending ? (
           <div className="mt-16 flex justify-center">
             <Loader2 className="size-6 animate-spin text-highlight" />
+          </div>
+        ) : isError || (plans ?? []).length === 0 ? (
+          <div className="glass mx-auto mt-14 max-w-md rounded-3xl p-8 text-center">
+            <h3 className="font-display text-xl font-extrabold">Plans couldn’t load</h3>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Something went wrong while fetching our premium plans. Please try again.
+            </p>
+            <Button variant="hero" size="lg" className="mt-6 w-full" onClick={() => refetch()} disabled={isFetching}>
+              {isFetching ? <Loader2 className="animate-spin" /> : <Sparkles />} Retry
+            </Button>
           </div>
         ) : (
           <div className="mt-14 grid gap-6 md:grid-cols-2">
