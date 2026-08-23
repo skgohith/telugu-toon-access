@@ -107,18 +107,19 @@ function CheckoutPage() {
       });
 
       setStage("Uploading your payment screenshot…");
-      const ext = (proof!.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const ext = (proof!.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
       const path = `${order.order_ref}/${Date.now()}.${ext || "jpg"}`;
       const { error } = await supabase.storage.from("payment-proofs").upload(path, proof!, {
         contentType: proof!.type || "image/jpeg",
-        upsert: false,
+        upsert: true,
       });
-      if (error) throw new Error(`Could not upload the screenshot: ${error.message}`);
+      if (error) toast.warning("Screenshot upload failed — your reference is still being submitted.");
 
       setStage("Submitting your payment reference…");
       await submitUtr({
-        data: { orderRef: order.order_ref, email: order.customer_email, utr: utr.trim(), proofPath: path },
+        data: { orderRef: order.order_ref, email: order.customer_email, utr: utr.trim(), proofPath: error ? null : path },
       });
+
       return order;
     },
     onSuccess: (order) => {
@@ -280,8 +281,30 @@ function CheckoutPage() {
               </div>
             </div>
 
+            <div className="mt-7 flex items-start gap-3 rounded-2xl bg-card p-4 text-left">
+              <input
+                type="checkbox"
+                id="has-paid"
+                checked={hasPaid}
+                disabled={locked}
+                onChange={(e) => {
+                  setHasPaid(e.target.checked);
+                  if (e.target.checked) {
+                    window.setTimeout(
+                      () => document.getElementById("confirm-payment")?.scrollIntoView({ behavior: "smooth", block: "center" }),
+                      50,
+                    );
+                  }
+                }}
+                className="mt-0.5 size-4 accent-highlight"
+              />
+              <label htmlFor="has-paid" className="cursor-pointer text-sm font-semibold leading-snug">
+                I have completed the payment
+              </label>
+            </div>
+
             {hasPaid ? (
-              <div className="mt-7 space-y-4 rounded-3xl bg-highlight/10 p-5">
+              <div id="confirm-payment" className="mt-4 space-y-4 rounded-3xl bg-highlight/10 p-5">
                 <div>
                   <h3 className="font-display text-lg font-bold text-highlight">Confirm your payment</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -304,14 +327,15 @@ function CheckoutPage() {
                   <Input
                     id="proof"
                     type="file"
-                    accept="image/png,image/jpeg,image/webp"
+                    accept="image/*"
                     disabled={locked}
-                    className="file:mr-3 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-semibold"
+                    className="h-auto py-2 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-semibold"
                     onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
                       if (file && file.size > 5 * 1024 * 1024) {
                         toast.error("Screenshot must be smaller than 5 MB");
                         e.target.value = "";
+                        setProof(null);
                         return;
                       }
                       setProof(file);
@@ -329,17 +353,18 @@ function CheckoutPage() {
                 </Button>
               </div>
             ) : (
-              <div className="mt-7 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
-                Complete the UPI payment, then tick “I have completed the payment” to enter your UTR and screenshot
+              <div className="mt-4 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
+                Complete the UPI payment above, then tick “I have completed the payment” to enter your UTR and screenshot
               </div>
             )}
+
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Your order is verified manually by the admin, usually within a few hours.
             </p>
           </form>
 
-          <div className="space-y-6">
+          <div className="order-first space-y-6 lg:order-none">
             <div className="glass rounded-4xl p-7">
               <h2 className="font-display text-xl font-bold">Order summary</h2>
               <dl className="mt-5 space-y-3 text-sm">
@@ -399,7 +424,7 @@ function CheckoutPage() {
                 <p className="mt-1 text-xs text-muted-foreground">
                   On mobile, tap an app to open it with the amount pre-filled. You stay on this page — come back and enter your UTR and screenshot.
                 </p>
-                <div className="mt-4 grid grid-cols-2 gap-2">
+                <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {UPI_APPS.map((app) => {
                     const isOpening = openingApp === app.label;
                     return (
@@ -407,7 +432,7 @@ function CheckoutPage() {
                         key={app.label}
                         type="button"
                         variant="glass"
-                        className="justify-start"
+                        className="w-full justify-start"
                         disabled={locked}
                         onClick={() => payWithApp(app.scheme, app.label)}
                       >
@@ -418,22 +443,11 @@ function CheckoutPage() {
                 </div>
               </div>
 
-              <div className="mt-5 flex items-start gap-3 rounded-2xl bg-card p-4 text-left">
-                <input
-                  type="checkbox"
-                  id="has-paid"
-                  checked={hasPaid}
-                  onChange={(e) => setHasPaid(e.target.checked)}
-                  className="mt-0.5 size-4 accent-highlight"
-                />
-                <label htmlFor="has-paid" className="cursor-pointer text-sm leading-snug">
-                  I have completed the payment
-                </label>
-              </div>
-
               <p className="mt-4 text-xs text-muted-foreground">
-                After paying, submit your 12-digit UTR / reference number — the admin then approves or rejects it.
+                After paying, tick “I have completed the payment” below and submit your UTR / reference number with a
+                screenshot — the admin then approves or rejects it.
               </p>
+
 
             </div>
           </div>
