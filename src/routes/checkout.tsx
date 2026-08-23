@@ -363,7 +363,7 @@ function CheckoutPage() {
             </p>
           </form>
 
-          <div className="space-y-6">
+          <div className="order-first space-y-6 lg:order-none">
             <div className="glass rounded-4xl p-7">
               <h2 className="font-display text-xl font-bold">Order summary</h2>
               <dl className="mt-5 space-y-3 text-sm">
