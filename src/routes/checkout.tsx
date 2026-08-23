@@ -1,8 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { Copy, ImageUp, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
-import QRCode from "qrcode";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -15,6 +14,7 @@ import { inr } from "@/lib/format";
 import { createOrder, getPaymentDetails, submitUtr, validateCoupon } from "@/lib/store.api";
 
 import { plansQueryOptions } from "@/lib/plans";
+import upiQr from "@/assets/upi-qr.jpg.asset.json";
 
 const searchSchema = z.object({ planId: z.string().optional() });
 
@@ -65,7 +65,6 @@ function CheckoutPage() {
   const [form, setForm] = useState({ name: "", email: "", phone: "" });
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<CouponState | null>(null);
-  const [qr, setQr] = useState<string | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
   const [openingApp, setOpeningApp] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
@@ -75,16 +74,6 @@ function CheckoutPage() {
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
-
-  useEffect(() => {
-    if (!plan) return;
-    const link = `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(
-      "Telugu-Toon-World",
-    )}&am=${amountDue}&cu=INR&tn=${encodeURIComponent(`${plan.name} access`)}`;
-    QRCode.toDataURL(link, { width: 320, margin: 1, color: { dark: "#0f1224", light: "#ffffff" } })
-      .then(setQr)
-      .catch(() => setQr(null));
-  }, [plan, upiId, amountDue]);
 
   const couponMutation = useMutation({
     mutationFn: () => validateCoupon({ data: { planId: plan!.id, code: couponCode } }),
@@ -382,17 +371,14 @@ function CheckoutPage() {
             <div className="glass rounded-4xl p-7 text-center">
               <h2 className="font-display text-xl font-bold">Pay via UPI</h2>
               <p className="mt-1 text-xs text-muted-foreground">Scan the QR or pay to the UPI ID below.</p>
-              {qr ? (
-                <img
-                  src={qr}
-                  alt={`UPI QR code to pay ${inr(amountDue)} to Telugu-Toon-World`}
-                  className="mx-auto mt-5 size-52 rounded-3xl bg-card p-3"
-                />
-              ) : (
-                <div className="mx-auto mt-5 flex size-52 items-center justify-center rounded-3xl bg-muted">
-                  <Loader2 className="animate-spin text-highlight" />
-                </div>
-              )}
+              <img
+                src={upiQr.url}
+                alt={`UPI QR code for BOLLOJI HEMANTH (${upiId}) — scan to pay ${inr(amountDue)}`}
+                className="mx-auto mt-5 w-52 rounded-3xl bg-card p-2"
+                loading="lazy"
+              />
+              <p className="mt-2 text-xs font-semibold">BOLLOJI HEMANTH</p>
+
               <div className="mt-5 flex items-center justify-center gap-2">
                 <code className="rounded-full bg-muted px-4 py-2 text-sm font-semibold">{upiId}</code>
                 <Button
