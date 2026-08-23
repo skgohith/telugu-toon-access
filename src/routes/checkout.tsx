@@ -290,15 +290,59 @@ function CheckoutPage() {
             </div>
 
             {hasPaid ? (
-              <Button type="submit" variant="hero" size="lg" className="mt-7 w-full" disabled={locked}>
-                {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
-                {submitted ? "Order created — redirecting…" : "I have paid — continue"}
-              </Button>
+              <div className="mt-7 space-y-4 rounded-3xl bg-highlight/10 p-5">
+                <div>
+                  <h3 className="font-display text-lg font-bold text-highlight">Confirm your payment</h3>
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Your order is created only after you enter the UTR and attach the payment screenshot.
+                  </p>
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="utr">UTR / transaction reference</Label>
+                  <Input
+                    id="utr"
+                    value={utr}
+                    maxLength={40}
+                    placeholder="e.g. 402312345678"
+                    onChange={(e) => setUtr(e.target.value.toUpperCase())}
+                    disabled={locked}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="proof">Payment screenshot</Label>
+                  <Input
+                    id="proof"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    disabled={locked}
+                    className="file:mr-3 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-semibold"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0] ?? null;
+                      if (file && file.size > 5 * 1024 * 1024) {
+                        toast.error("Screenshot must be smaller than 5 MB");
+                        e.target.value = "";
+                        return;
+                      }
+                      setProof(file);
+                    }}
+                  />
+                  {proof && (
+                    <p className="flex items-center gap-2 text-xs font-semibold text-success">
+                      <ImageUp className="size-3.5" /> {proof.name} ready to upload
+                    </p>
+                  )}
+                </div>
+                <Button type="submit" variant="hero" size="lg" className="w-full" disabled={locked}>
+                  {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
+                  {stage ?? (submitted ? "Submitted — redirecting…" : "Submit payment details")}
+                </Button>
+              </div>
             ) : (
               <div className="mt-7 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
-                Complete the payment and confirm below to continue
+                Complete the UPI payment, then tick “I have completed the payment” to enter your UTR and screenshot
               </div>
             )}
+
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Your order is verified manually by the admin, usually within a few hours.
             </p>
