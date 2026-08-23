@@ -8,7 +8,7 @@ import { SectionHeading, SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { CATEGORIES } from "@/lib/categories";
 import { inr } from "@/lib/format";
-import { listPlans } from "@/lib/store.functions";
+import { plansQueryOptions } from "@/lib/plans";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -41,7 +41,7 @@ const FEATURES = [
 ];
 
 function Home() {
-  const { data: plans } = useQuery({ queryKey: ["plans"], queryFn: () => listPlans() });
+  const { data: plans } = useQuery(plansQueryOptions);
 
   return (
     <SiteLayout>
