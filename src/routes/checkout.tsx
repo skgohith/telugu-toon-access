@@ -382,17 +382,14 @@ function CheckoutPage() {
             <div className="glass rounded-4xl p-7 text-center">
               <h2 className="font-display text-xl font-bold">Pay via UPI</h2>
               <p className="mt-1 text-xs text-muted-foreground">Scan the QR or pay to the UPI ID below.</p>
-              {qr ? (
-                <img
-                  src={qr}
-                  alt={`UPI QR code to pay ${inr(amountDue)} to Telugu-Toon-World`}
-                  className="mx-auto mt-5 size-52 rounded-3xl bg-card p-3"
-                />
-              ) : (
-                <div className="mx-auto mt-5 flex size-52 items-center justify-center rounded-3xl bg-muted">
-                  <Loader2 className="animate-spin text-highlight" />
-                </div>
-              )}
+              <img
+                src={upiQr.url}
+                alt={`UPI QR code for BOLLOJI HEMANTH (${upiId}) — scan to pay ${inr(amountDue)}`}
+                className="mx-auto mt-5 w-52 rounded-3xl bg-card p-2"
+                loading="lazy"
+              />
+              <p className="mt-2 text-xs font-semibold">BOLLOJI HEMANTH</p>
+
               <div className="mt-5 flex items-center justify-center gap-2">
                 <code className="rounded-full bg-muted px-4 py-2 text-sm font-semibold">{upiId}</code>
                 <Button
