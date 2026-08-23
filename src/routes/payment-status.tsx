@@ -41,8 +41,10 @@ function PaymentStatusPage() {
 
   const [lookup, setLookup] = useState({ ref: ref ?? "", email: email ?? "" });
   const [utr, setUtr] = useState("");
+  const [attemptedUtrs, setAttemptedUtrs] = useState<string[]>([]);
   const [link, setLink] = useState<string | null>(null);
   const [justSubmitted, setJustSubmitted] = useState(false);
+
 
   const enabled = Boolean(ref && email);
   const queryKey = ["track-order", ref, email];
