@@ -107,18 +107,19 @@ function CheckoutPage() {
       });
 
       setStage("Uploading your payment screenshot…");
-      const ext = (proof!.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
+      const ext = (proof!.name.split(".").pop() ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
       const path = `${order.order_ref}/${Date.now()}.${ext || "jpg"}`;
       const { error } = await supabase.storage.from("payment-proofs").upload(path, proof!, {
         contentType: proof!.type || "image/jpeg",
-        upsert: false,
+        upsert: true,
       });
-      if (error) throw new Error(`Could not upload the screenshot: ${error.message}`);
+      if (error) toast.warning("Screenshot upload failed — your reference is still being submitted.");
 
       setStage("Submitting your payment reference…");
       await submitUtr({
-        data: { orderRef: order.order_ref, email: order.customer_email, utr: utr.trim(), proofPath: path },
+        data: { orderRef: order.order_ref, email: order.customer_email, utr: utr.trim(), proofPath: error ? null : path },
       });
+
       return order;
     },
     onSuccess: (order) => {
