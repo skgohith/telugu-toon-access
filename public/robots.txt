@@ -12,3 +12,5 @@ Allow: /
 
 User-agent: *
 Allow: /
+
+Sitemap: https://telugu-toon-access.lovable.app/sitemap.xml

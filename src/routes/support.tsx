@@ -21,6 +21,22 @@ export const Route = createFileRoute("/support")({
       },
       { property: "og:title", content: "Support & FAQ — Telugu-Toon-World" },
       { property: "og:description", content: "Answers about payments, verification time and channel access." },
+      { property: "og:url", content: "https://telugu-toon-access.lovable.app/support" },
+    ],
+    links: [{ rel: "canonical", href: "https://telugu-toon-access.lovable.app/support" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "FAQPage",
+          mainEntity: FAQS.map((item) => ({
+            "@type": "Question",
+            name: item.q,
+            acceptedAnswer: { "@type": "Answer", text: item.a },
+          })),
+        }),
+      },
     ],
   }),
   component: SupportPage,
