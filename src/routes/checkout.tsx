@@ -280,8 +280,30 @@ function CheckoutPage() {
               </div>
             </div>
 
+            <div className="mt-7 flex items-start gap-3 rounded-2xl bg-card p-4 text-left">
+              <input
+                type="checkbox"
+                id="has-paid"
+                checked={hasPaid}
+                disabled={locked}
+                onChange={(e) => {
+                  setHasPaid(e.target.checked);
+                  if (e.target.checked) {
+                    window.setTimeout(
+                      () => document.getElementById("confirm-payment")?.scrollIntoView({ behavior: "smooth", block: "center" }),
+                      50,
+                    );
+                  }
+                }}
+                className="mt-0.5 size-4 accent-highlight"
+              />
+              <label htmlFor="has-paid" className="cursor-pointer text-sm font-semibold leading-snug">
+                I have completed the payment
+              </label>
+            </div>
+
             {hasPaid ? (
-              <div className="mt-7 space-y-4 rounded-3xl bg-highlight/10 p-5">
+              <div id="confirm-payment" className="mt-4 space-y-4 rounded-3xl bg-highlight/10 p-5">
                 <div>
                   <h3 className="font-display text-lg font-bold text-highlight">Confirm your payment</h3>
                   <p className="mt-1 text-xs text-muted-foreground">
@@ -304,14 +326,15 @@ function CheckoutPage() {
                   <Input
                     id="proof"
                     type="file"
-                    accept="image/png,image/jpeg,image/webp"
+                    accept="image/*"
                     disabled={locked}
-                    className="file:mr-3 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-semibold"
+                    className="h-auto py-2 text-xs file:mr-3 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-semibold"
                     onChange={(e) => {
                       const file = e.target.files?.[0] ?? null;
                       if (file && file.size > 5 * 1024 * 1024) {
                         toast.error("Screenshot must be smaller than 5 MB");
                         e.target.value = "";
+                        setProof(null);
                         return;
                       }
                       setProof(file);
@@ -329,10 +352,11 @@ function CheckoutPage() {
                 </Button>
               </div>
             ) : (
-              <div className="mt-7 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
-                Complete the UPI payment, then tick “I have completed the payment” to enter your UTR and screenshot
+              <div className="mt-4 rounded-2xl border border-dashed border-border/60 p-4 text-center text-sm text-muted-foreground">
+                Complete the UPI payment above, then tick “I have completed the payment” to enter your UTR and screenshot
               </div>
             )}
+
 
             <p className="mt-3 text-center text-xs text-muted-foreground">
               Your order is verified manually by the admin, usually within a few hours.
