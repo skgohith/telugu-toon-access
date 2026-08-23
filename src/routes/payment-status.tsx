@@ -82,6 +82,8 @@ function PaymentStatusPage() {
   });
 
   const utrLocked = utrMutation.isPending || justSubmitted;
+  const utrCheck = validateUtr(utr);
+
 
   function doLookup(event: React.FormEvent) {
     event.preventDefault();
