@@ -100,6 +100,21 @@ export async function createOrder(input: {
   return unwrap<OrderRow>(data, error);
 }
 
+/** Creates the order with its payment reference atomically. */
+export async function createPaidOrder(input: {
+  data: { planId: string; couponCode?: string | null; name: string; email: string; phone: string; utr: string };
+}): Promise<OrderRow> {
+  const { data, error } = await rpc("guest_create_paid_order", {
+    p_plan_id: input.data.planId,
+    p_coupon_code: input.data.couponCode ?? null,
+    p_name: input.data.name,
+    p_email: input.data.email,
+    p_phone: input.data.phone,
+    p_utr: input.data.utr,
+  });
+  return unwrap<OrderRow>(data, error);
+}
+
 export async function trackOrder(input: { data: { orderRef: string; email: string } }): Promise<OrderRow | null> {
   const { data, error } = await rpc("guest_track_order", {
     p_order_ref: input.data.orderRef,

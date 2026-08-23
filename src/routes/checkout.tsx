@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { inr } from "@/lib/format";
-import { createOrder, getPaymentDetails, submitUtr, validateCoupon } from "@/lib/store.api";
+import { createPaidOrder, getPaymentDetails, validateCoupon } from "@/lib/store.api";
 
 import { plansQueryOptions } from "@/lib/plans";
 import upiQr from "@/assets/upi-qr.jpg";
@@ -93,23 +93,17 @@ function CheckoutPage() {
    */
   const orderMutation = useMutation({
     mutationFn: async () => {
-      setStage("Creating your order…");
-      const order = await createOrder({
+      setStage("Submitting your payment details…");
+      return createPaidOrder({
         data: {
           planId: plan!.id,
           couponCode: coupon?.code ?? null,
           name: form.name.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
+          utr: utr.trim(),
         },
       });
-
-      setStage("Submitting your payment reference…");
-      await submitUtr({
-        data: { orderRef: order.order_ref, email: order.customer_email, utr: utr.trim(), proofPath: null },
-      });
-
-      return order;
     },
     onSuccess: (order) => {
       setSubmitted(true);

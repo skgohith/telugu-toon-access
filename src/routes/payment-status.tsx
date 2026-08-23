@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { CheckCircle2, Clock, ImageUp, Loader2, Search, Send, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, Search, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -9,7 +9,6 @@ import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { supabase } from "@/integrations/supabase/client";
 import { dateTime, inr } from "@/lib/format";
 import { getTelegramAccess, submitUtr, trackOrder } from "@/lib/store.api";
 
@@ -41,8 +40,6 @@ function PaymentStatusPage() {
   const [lookup, setLookup] = useState({ ref: ref ?? "", email: email ?? "" });
   const [utr, setUtr] = useState("");
   const [link, setLink] = useState<string | null>(null);
-  const [proof, setProof] = useState<File | null>(null);
-  const [uploading, setUploading] = useState(false);
   const [justSubmitted, setJustSubmitted] = useState(false);
 
   const enabled = Boolean(ref && email);
@@ -56,30 +53,13 @@ function PaymentStatusPage() {
   });
 
   const utrMutation = useMutation({
-    mutationFn: async () => {
-      let proofPath: string | null = null;
-      if (proof) {
-        setUploading(true);
-        const ext = (proof.name.split(".").pop() ?? "jpg").toLowerCase().replace(/[^a-z0-9]/g, "");
-        const path = `${ref!.toUpperCase()}/${Date.now()}.${ext || "jpg"}`;
-        const { error } = await supabase.storage.from("payment-proofs").upload(path, proof, {
-          contentType: proof.type || "image/jpeg",
-          upsert: false,
-        });
-        setUploading(false);
-        if (error) throw new Error(`Could not upload the screenshot: ${error.message}`);
-        proofPath = path;
-      }
-      return submitUtr({ data: { orderRef: ref!, email: email!, utr, proofPath } });
-    },
+    mutationFn: () => submitUtr({ data: { orderRef: ref!, email: email!, utr, proofPath: null } }),
     onSuccess: () => {
       toast.success("Reference submitted! The admin will verify shortly.");
       setJustSubmitted(true);
-      setProof(null);
       queryClient.invalidateQueries({ queryKey });
     },
     onError: (error) => {
-      setUploading(false);
       toast.error(error instanceof Error ? error.message : "Could not submit reference");
     },
   });
@@ -97,7 +77,7 @@ function PaymentStatusPage() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not fetch the invite link"),
   });
 
-  const utrLocked = utrMutation.isPending || uploading || justSubmitted;
+  const utrLocked = utrMutation.isPending || justSubmitted;
 
   function doLookup(event: React.FormEvent) {
     event.preventDefault();
@@ -190,8 +170,8 @@ function PaymentStatusPage() {
               <div className="mt-8 rounded-3xl bg-highlight/10 p-6">
                 <h3 className="font-display text-lg font-bold text-highlight">Submit your payment reference</h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  Enter the UTR / transaction reference from your UPI app and optionally attach a screenshot of the
-                  payment. You can update it until the admin reviews your order.
+                  Enter the UTR / transaction reference from your UPI app. You can update it until the admin reviews
+                  your order.
                 </p>
                 <form
                   className="mt-5 space-y-4"
@@ -216,40 +196,9 @@ function PaymentStatusPage() {
                     />
                   </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="proof">Payment screenshot (optional)</Label>
-                    <Input
-                      id="proof"
-                      type="file"
-                      accept="image/png,image/jpeg,image/webp"
-                      className="file:mr-3 file:rounded-full file:border-0 file:bg-muted file:px-3 file:py-1 file:text-xs file:font-semibold"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0] ?? null;
-                        if (file && file.size > 5 * 1024 * 1024) {
-                          toast.error("Screenshot must be smaller than 5 MB");
-                          e.target.value = "";
-                          return;
-                        }
-                        setProof(file);
-                      }}
-                    />
-                    {proof && (
-                      <p className="flex items-center gap-2 text-xs text-success">
-                        <ImageUp className="size-3.5" /> {proof.name} ready to upload
-                      </p>
-                    )}
-                    {order.proof_path && !proof && (
-                      <p className="text-xs text-muted-foreground">A screenshot is already attached to this order.</p>
-                    )}
-                  </div>
-
                   <Button type="submit" variant="gold" className="w-full sm:w-auto" disabled={utrLocked}>
                     {utrMutation.isPending ? <Loader2 className="animate-spin" /> : <Send />}{" "}
-                    {uploading
-                      ? "Uploading screenshot…"
-                      : justSubmitted
-                        ? "Submitted — awaiting admin review"
-                        : "Submit reference"}
+                    {justSubmitted ? "Submitted — awaiting admin review" : "Submit reference"}
                   </Button>
                 </form>
               </div>
