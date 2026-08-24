@@ -54,6 +54,8 @@ import {
   adminUpdatePlanPrice,
 
 } from "@/lib/admin.api";
+import { sendAccessEmail } from "@/lib/order-email.functions";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
