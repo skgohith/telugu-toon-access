@@ -7,6 +7,12 @@ import {
   Clock,
   Eye,
   ImageUp,
+  ClipboardList,
+  Database,
+  Layers,
+  LayoutDashboard,
+  QrCode,
+  TicketPercent,
   Mail,
   Loader2,
   LogOut,
@@ -78,6 +84,16 @@ export const Route = createFileRoute("/admin")({
   component: AdminPage,
 });
 
+const ADMIN_SECTIONS = [
+  { value: "overview", label: "Overview", icon: LayoutDashboard },
+  { value: "orders", label: "Orders", icon: ClipboardList },
+  { value: "prices", label: "Plan prices", icon: BadgeIndianRupee },
+  { value: "plans", label: "Plans", icon: Layers },
+  { value: "coupons", label: "Coupons", icon: TicketPercent },
+  { value: "payment", label: "Payment", icon: QrCode },
+  { value: "data", label: "Data", icon: Database },
+] as const;
+
 const CHART_COLORS = ["var(--color-chart-3)", "var(--color-chart-4)", "var(--color-chart-5)"];
 
 function AdminPage() {
@@ -140,52 +156,42 @@ function AdminPage() {
           </Button>
         </div>
 
-        <Tabs defaultValue="overview" className="mt-8">
-          <TabsList className="glass flex w-full flex-wrap justify-start gap-1 rounded-full p-1">
-            <TabsTrigger value="overview" className="rounded-full px-4">
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="orders" className="rounded-full px-4">
-              Orders
-            </TabsTrigger>
-            <TabsTrigger value="prices" className="rounded-full px-4">
-              Plan prices
-            </TabsTrigger>
-            <TabsTrigger value="plans" className="rounded-full px-4">
-              Plans
-            </TabsTrigger>
-            <TabsTrigger value="coupons" className="rounded-full px-4">
-              Coupons
-            </TabsTrigger>
-            <TabsTrigger value="payment" className="rounded-full px-4">
-              Payment
-            </TabsTrigger>
-            <TabsTrigger value="data" className="rounded-full px-4">
-              Data
-            </TabsTrigger>
+        <Tabs defaultValue="overview" orientation="vertical" className="mt-8 gap-6 lg:flex lg:items-start">
+          <TabsList className="glass flex w-full flex-row gap-1 overflow-x-auto rounded-3xl p-2 lg:sticky lg:top-24 lg:w-56 lg:flex-col lg:overflow-visible">
+            {ADMIN_SECTIONS.map(({ value, label, icon: Icon }) => (
+              <TabsTrigger
+                key={value}
+                value={value}
+                className="shrink-0 justify-start gap-2 rounded-2xl px-4 py-2.5 text-sm lg:w-full"
+              >
+                <Icon className="size-4" /> {label}
+              </TabsTrigger>
+            ))}
           </TabsList>
 
-          <TabsContent value="overview" className="mt-6">
-            <OverviewTab />
-          </TabsContent>
-          <TabsContent value="orders" className="mt-6">
-            <OrdersTab />
-          </TabsContent>
-          <TabsContent value="prices" className="mt-6">
-            <PricesTab />
-          </TabsContent>
-          <TabsContent value="plans" className="mt-6">
-            <PlansTab />
-          </TabsContent>
-          <TabsContent value="coupons" className="mt-6">
-            <CouponsTab />
-          </TabsContent>
-          <TabsContent value="payment" className="mt-6">
-            <PaymentTab />
-          </TabsContent>
-          <TabsContent value="data" className="mt-6">
-            <DataTab />
-          </TabsContent>
+          <div className="min-w-0 flex-1">
+            <TabsContent value="overview" className="mt-6 lg:mt-0">
+              <OverviewTab />
+            </TabsContent>
+            <TabsContent value="orders" className="mt-6 lg:mt-0">
+              <OrdersTab />
+            </TabsContent>
+            <TabsContent value="prices" className="mt-6 lg:mt-0">
+              <PricesTab />
+            </TabsContent>
+            <TabsContent value="plans" className="mt-6 lg:mt-0">
+              <PlansTab />
+            </TabsContent>
+            <TabsContent value="coupons" className="mt-6 lg:mt-0">
+              <CouponsTab />
+            </TabsContent>
+            <TabsContent value="payment" className="mt-6 lg:mt-0">
+              <PaymentTab />
+            </TabsContent>
+            <TabsContent value="data" className="mt-6 lg:mt-0">
+              <DataTab />
+            </TabsContent>
+          </div>
         </Tabs>
 
       </section>
@@ -1086,25 +1092,61 @@ function PaymentTab() {
             onChange={(e) => setForm((f) => ({ ...f, payeeName: e.target.value }))}
           />
         </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="pay-qr">QR image link (optional)</Label>
+        <div className="space-y-2">
+          <Label htmlFor="pay-qr-file">QR code image</Label>
+          <Input
+            id="pay-qr-file"
+            type="file"
+            accept="image/png,image/jpeg,image/webp"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              e.target.value = "";
+              if (!file) return;
+              if (!/^image\/(png|jpe?g|webp)$/.test(file.type)) {
+                toast.error("Upload a PNG, JPG or WEBP image.");
+                return;
+              }
+              if (file.size > 400_000) {
+                toast.error("Please upload an image smaller than 400 KB.");
+                return;
+              }
+              const dataUrl = await new Promise<string>((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result));
+                reader.onerror = () => reject(new Error("Could not read that file."));
+                reader.readAsDataURL(file);
+              }).catch(() => "");
+              if (!dataUrl) {
+                toast.error("Could not read that image.");
+                return;
+              }
+              setForm((f) => ({ ...f, qrUrl: dataUrl }));
+              toast.success("Image ready — press Save to publish it.");
+            }}
+          />
+          <p className="text-xs text-muted-foreground">
+            Upload your UPI QR screenshot (under 400 KB), or paste an image link below. Leave both empty to keep the
+            built-in QR.
+          </p>
           <Input
             id="pay-qr"
             placeholder="https://..."
-            value={form.qrUrl}
+            value={form.qrUrl.startsWith("data:") ? "" : form.qrUrl}
             onChange={(e) => setForm((f) => ({ ...f, qrUrl: e.target.value }))}
           />
-          <p className="text-xs text-muted-foreground">
-            Leave empty to keep the built-in QR image. Paste a public image link to replace it.
-          </p>
         </div>
 
         {form.qrUrl ? (
-          <img
-            src={form.qrUrl}
-            alt="Preview of the QR code customers will scan"
-            className="w-40 rounded-3xl bg-card p-2"
-          />
+          <div className="space-y-2">
+            <img
+              src={form.qrUrl}
+              alt="Preview of the QR code customers will scan"
+              className="w-40 rounded-3xl bg-card p-2"
+            />
+            <Button variant="glass" size="sm" onClick={() => setForm((f) => ({ ...f, qrUrl: "" }))}>
+              <Trash2 className="size-4" /> Remove image
+            </Button>
+          </div>
         ) : null}
 
         <Button variant="hero" disabled={save.isPending} onClick={() => save.mutate()}>
