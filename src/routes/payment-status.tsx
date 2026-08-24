@@ -49,6 +49,8 @@ function PaymentStatusPage() {
   const [waitOpen, setWaitOpen] = useState(false);
   const [thanksOpen, setThanksOpen] = useState(false);
   const previousStatus = useRef<string | null>(null);
+  const waitDismissed = useRef(false);
+
 
   const enabled = Boolean(ref && email);
   const queryKey = ["track-order", ref, email];
