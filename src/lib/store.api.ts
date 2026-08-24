@@ -40,6 +40,10 @@ export type OrderRow = {
   approved_at: string | null;
   rejected_at: string | null;
   created_at: string;
+  access_email_status: "not_sent" | "sending" | "sent" | "failed" | "suppressed";
+  access_email_error: string | null;
+  access_email_attempts: number;
+  access_email_sent_at: string | null;
 };
 
 export type CouponResult =
