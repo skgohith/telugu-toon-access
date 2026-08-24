@@ -330,12 +330,13 @@ function CheckoutPage() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="utr">UTR / transaction reference</Label>
+                  <Label htmlFor="utr">UTR / transaction reference ({UTR_LENGTH} digits)</Label>
                   <Input
                     id="utr"
                     value={utr}
-                    maxLength={40}
-                    placeholder="e.g. 402312345678"
+                    inputMode="numeric"
+                    maxLength={UTR_LENGTH}
+                    placeholder="402312345678"
                     aria-invalid={utr.length > 0 && !utrCheck.ok}
                     aria-describedby="utr-help"
                     onChange={(e) => setUtr(normalizeUtr(e.target.value))}
@@ -348,6 +349,7 @@ function CheckoutPage() {
                     {utr.length > 0 && !utrCheck.ok ? utrCheck.message : `${UTR_HINT}. Each UTR can be used only once.`}
                   </p>
                 </div>
+
                 <Button type="submit" variant="hero" size="lg" className="w-full" disabled={locked || !utrCheck.ok}>
                   {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
                   {stage ?? (submitted ? "Submitted — redirecting…" : "Submit payment details")}
