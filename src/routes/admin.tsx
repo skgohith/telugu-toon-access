@@ -52,6 +52,8 @@ import {
   adminPlans,
   adminProofUrl,
   adminSaveCoupon,
+  adminSavePlan,
+  type AdminPlan,
   adminSetOrderStatus,
   adminUpdatePlanPrice,
 
@@ -146,6 +148,9 @@ function AdminPage() {
             <TabsTrigger value="prices" className="rounded-full px-4">
               Plan prices
             </TabsTrigger>
+            <TabsTrigger value="plans" className="rounded-full px-4">
+              Plans
+            </TabsTrigger>
             <TabsTrigger value="coupons" className="rounded-full px-4">
               Coupons
             </TabsTrigger>
@@ -162,6 +167,9 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="prices" className="mt-6">
             <PricesTab />
+          </TabsContent>
+          <TabsContent value="plans" className="mt-6">
+            <PlansTab />
           </TabsContent>
           <TabsContent value="coupons" className="mt-6">
             <CouponsTab />
@@ -735,6 +743,141 @@ function CouponsTab() {
         )}
       </div>
     </div>
+  );
+}
+
+/** Full plan editor — every customer-visible detail of a plan. */
+function PlansTab() {
+  const queryClient = useQueryClient();
+  const { data: plans, isLoading } = useQuery({ queryKey: ["admin-plans"], queryFn: () => adminPlans() });
+
+  if (isLoading) return <Spinner />;
+
+  return (
+    <div className="space-y-5">
+      <div className="glass rounded-3xl p-6">
+        <h2 className="font-display text-lg font-bold">Plans</h2>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Edit everything customers see: name, price, duration, description, features, the Telegram invite link and
+          whether the plan is shown on the storefront.
+        </p>
+      </div>
+      {(plans ?? []).map((plan) => (
+        <PlanEditor key={plan.id} plan={plan} onSaved={() => {
+          queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
+          queryClient.invalidateQueries({ queryKey: ["plans"] });
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function PlanEditor({ plan, onSaved }: { plan: AdminPlan; onSaved: () => void }) {
+  const [form, setForm] = useState(() => ({
+    name: plan.name,
+    price: String(plan.price),
+    durationDays: String(plan.duration_days),
+    durationLabel: plan.duration_label ?? "",
+    description: plan.description ?? "",
+    features: (plan.features ?? []).join("\n"),
+    telegramLink: plan.telegram_link ?? "",
+    active: plan.active,
+    recommended: plan.recommended,
+    sortOrder: String(plan.sort_order ?? 0),
+  }));
+
+  const mutation = useMutation({
+    mutationFn: () =>
+      adminSavePlan({
+        data: {
+          id: plan.id,
+          name: form.name,
+          price: Number(form.price),
+          durationDays: Number(form.durationDays),
+          durationLabel: form.durationLabel,
+          description: form.description,
+          features: form.features.split("\n"),
+          telegramLink: form.telegramLink,
+          active: form.active,
+          recommended: form.recommended,
+          sortOrder: Number(form.sortOrder),
+        },
+      }),
+    onSuccess: () => {
+      toast.success(`${form.name || "Plan"} updated — the storefront now shows the new details.`);
+      onSaved();
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save this plan"),
+  });
+
+  const set = (key: keyof typeof form) => (value: string | boolean) =>
+    setForm((prev) => ({ ...prev, [key]: value }));
+
+  return (
+    <form
+      className="glass rounded-3xl p-6"
+      onSubmit={(event) => {
+        event.preventDefault();
+        mutation.mutate();
+      }}
+    >
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <p className="font-display text-base font-bold">{plan.name}</p>
+        <p className="text-xs text-muted-foreground">Current price {inr(plan.price)}</p>
+      </div>
+
+      <div className="mt-5 grid gap-4 md:grid-cols-2">
+        <div className="space-y-2">
+          <Label htmlFor={`name-${plan.id}`}>Plan name</Label>
+          <Input id={`name-${plan.id}`} value={form.name} onChange={(e) => set("name")(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`p-${plan.id}`}>Price (₹)</Label>
+          <Input id={`p-${plan.id}`} type="number" min={1} step="1" value={form.price} onChange={(e) => set("price")(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`dl-${plan.id}`}>Duration label</Label>
+          <Input id={`dl-${plan.id}`} value={form.durationLabel} placeholder="1 Month / Lifetime" onChange={(e) => set("durationLabel")(e.target.value)} />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`dd-${plan.id}`}>Duration in days</Label>
+          <Input id={`dd-${plan.id}`} type="number" min={1} step="1" value={form.durationDays} onChange={(e) => set("durationDays")(e.target.value)} />
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor={`desc-${plan.id}`}>Short description</Label>
+          <Textarea id={`desc-${plan.id}`} rows={2} value={form.description} onChange={(e) => set("description")(e.target.value)} />
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor={`f-${plan.id}`}>Features (one per line)</Label>
+          <Textarea id={`f-${plan.id}`} rows={5} value={form.features} onChange={(e) => set("features")(e.target.value)} />
+        </div>
+        <div className="space-y-2 md:col-span-2">
+          <Label htmlFor={`tl-${plan.id}`}>Telegram invite link</Label>
+          <Input id={`tl-${plan.id}`} value={form.telegramLink} placeholder="https://t.me/+..." onChange={(e) => set("telegramLink")(e.target.value)} />
+          <p className="text-xs text-muted-foreground">Sent to customers automatically once you approve their payment.</p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor={`so-${plan.id}`}>Display order</Label>
+          <Input id={`so-${plan.id}`} type="number" step="1" value={form.sortOrder} onChange={(e) => set("sortOrder")(e.target.value)} />
+        </div>
+        <div className="flex items-end gap-6">
+          <label className="flex items-center gap-2 text-sm">
+            <Switch checked={form.active} onCheckedChange={(v) => set("active")(v)} />
+            Visible on store
+          </label>
+          <label className="flex items-center gap-2 text-sm">
+            <Switch checked={form.recommended} onCheckedChange={(v) => set("recommended")(v)} />
+            Most popular
+          </label>
+        </div>
+      </div>
+
+      <div className="mt-6 flex justify-end">
+        <Button type="submit" disabled={mutation.isPending}>
+          {mutation.isPending ? "Saving…" : "Save plan"}
+        </Button>
+      </div>
+    </form>
   );
 }
 
