@@ -346,8 +346,60 @@ function PaymentStatusPage() {
           </div>
         )}
       </section>
+
+      <Dialog
+        open={waitOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            waitDismissed.current = true;
+            setWaitOpen(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2 text-highlight">
+              <Loader2 className="size-5 animate-spin" /> Please don’t leave this page
+            </DialogTitle>
+            <DialogDescription>
+              Your payment reference {order?.utr ? `(${order.utr})` : ""} has been sent to the admin. Do not refresh or
+              close this page — we’re waiting for the confirmation and this page updates automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Order {order?.order_ref}. Verification is usually done within a few hours — you can safely return later with
+            your reference if it takes longer.
+          </p>
+          <Button
+            type="button"
+            variant="glass"
+            onClick={() => queryClient.invalidateQueries({ queryKey })}
+            disabled={isFetching}
+          >
+            {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />} Check now
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={thanksOpen} onOpenChange={setThanksOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2 text-success">
+              <PartyPopper className="size-5" /> Thanks for purchasing!
+            </DialogTitle>
+            <DialogDescription>
+              Your payment is verified{order ? ` for ${order.plan_name}` : ""}. Your private Telegram invite is ready —
+              welcome to Telugu-Toon-World.
+            </DialogDescription>
+          </DialogHeader>
+          <Button variant="hero" onClick={() => linkMutation.mutate()} disabled={linkMutation.isPending}>
+            {linkMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle2 />} Join Telegram channel
+          </Button>
+        </DialogContent>
+      </Dialog>
     </SiteLayout>
   );
+
 }
 
 function Row({ label, value }: { label: string; value: string }) {
