@@ -28,6 +28,10 @@ export type AdminOrder = {
   approved_at: string | null;
   rejected_at: string | null;
   created_at: string;
+  access_email_status: "not_sent" | "sending" | "sent" | "failed" | "suppressed";
+  access_email_error: string | null;
+  access_email_attempts: number;
+  access_email_sent_at: string | null;
 };
 
 export type AdminCoupon = {
@@ -57,7 +61,7 @@ export type AdminPlan = {
 };
 
 const ADMIN_ORDER_COLUMNS =
-  "id, order_ref, user_id, plan_name, coupon_code, customer_name, customer_email, customer_phone, instagram_username, telegram_username, original_amount, discount_amount, final_amount, utr, proof_path, payment_status, telegram_access, approved_at, rejected_at, created_at";
+  "id, order_ref, user_id, plan_name, coupon_code, customer_name, customer_email, customer_phone, instagram_username, telegram_username, original_amount, discount_amount, final_amount, utr, proof_path, payment_status, telegram_access, approved_at, rejected_at, created_at, access_email_status, access_email_error, access_email_attempts, access_email_sent_at";
 
 type Rpc = (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
 const rpc = supabase.rpc.bind(supabase) as unknown as Rpc;

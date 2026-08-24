@@ -5,7 +5,9 @@ import {
   BadgeIndianRupee,
   CheckCircle2,
   Clock,
+  Eye,
   ImageUp,
+  Mail,
   Loader2,
   LogOut,
   Search,
@@ -54,7 +56,8 @@ import {
   adminUpdatePlanPrice,
 
 } from "@/lib/admin.api";
-import { sendAccessEmail } from "@/lib/order-email.functions";
+import { previewAccessEmail, sendAccessEmail } from "@/lib/order-email.functions";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 
 export const Route = createFileRoute("/admin")({
@@ -305,7 +308,10 @@ function OrdersTab() {
       await adminSetOrderStatus({ data: input });
       if (input.status === "completed") {
         try {
-          await sendAccessEmail({ data: { orderId: input.orderId } });
+          const email = await sendAccessEmail({ data: { orderId: input.orderId } });
+          if (email.status !== "sent") {
+            toast.warning("Access unlocked, but the invite email was not delivered — try Resend email.");
+          }
         } catch {
           toast.warning("Access unlocked, but the invite email could not be sent.");
         }
@@ -331,6 +337,31 @@ function OrdersTab() {
       window.open(result.url, "_blank", "noopener,noreferrer");
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not open the proof"),
+  });
+
+  const [preview, setPreview] = useState<{ to: string; subject: string; html: string } | null>(null);
+
+  const previewMutation = useMutation({
+    mutationFn: (input: { orderId: string }) => previewAccessEmail({ data: input }),
+    onSuccess: (result) => {
+      if (!result.ok) {
+        toast.error(result.message);
+        return;
+      }
+      setPreview({ to: result.to, subject: result.subject, html: result.html });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not render the email"),
+  });
+
+  const resendMutation = useMutation({
+    mutationFn: (input: { orderId: string }) => sendAccessEmail({ data: { orderId: input.orderId, force: true } }),
+    onSuccess: (result) => {
+      if (result.status === "sent") toast.success("Invite email sent to the customer.");
+      else if (result.status === "suppressed") toast.error("The customer's address is blocked by the mail provider.");
+      else toast.error(result.message ?? "Could not send the email.");
+      queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not send the email"),
   });
 
   return (
@@ -386,17 +417,59 @@ function OrdersTab() {
                     {order.coupon_code ? ` · coupon ${order.coupon_code}` : ""} · {dateTime(order.created_at)}
                   </p>
                   <p className="mt-1 text-xs font-semibold text-highlight">UTR: {order.utr ?? "not submitted"}</p>
-                  {order.proof_path && (
-                    <Button
-                      size="sm"
-                      variant="glass"
-                      className="mt-2"
-                      onClick={() => proofMutation.mutate({ orderId: order.id })}
-                      disabled={proofMutation.isPending}
-                    >
-                      <ImageUp /> View payment proof
-                    </Button>
+                  {order.payment_status === "completed" && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Invite email:{" "}
+                      <span
+                        className={
+                          order.access_email_status === "sent"
+                            ? "font-semibold text-success"
+                            : order.access_email_status === "failed" || order.access_email_status === "suppressed"
+                              ? "font-semibold text-destructive"
+                              : "font-semibold text-highlight"
+                        }
+                      >
+                        {order.access_email_status === "sent"
+                          ? `sent${order.access_email_sent_at ? ` · ${dateTime(order.access_email_sent_at)}` : ""}`
+                          : order.access_email_status === "not_sent"
+                            ? "not sent yet"
+                            : order.access_email_status}
+                      </span>
+                      {order.access_email_error ? ` · ${order.access_email_error}` : ""}
+                    </p>
                   )}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {order.proof_path && (
+                      <Button
+                        size="sm"
+                        variant="glass"
+                        onClick={() => proofMutation.mutate({ orderId: order.id })}
+                        disabled={proofMutation.isPending}
+                      >
+                        <ImageUp /> View payment proof
+                      </Button>
+                    )}
+                    {order.payment_status === "completed" && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="glass"
+                          onClick={() => previewMutation.mutate({ orderId: order.id })}
+                          disabled={previewMutation.isPending}
+                        >
+                          <Eye /> Preview email
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="glass"
+                          onClick={() => resendMutation.mutate({ orderId: order.id })}
+                          disabled={resendMutation.isPending}
+                        >
+                          {resendMutation.isPending ? <Loader2 className="animate-spin" /> : <Mail />} Resend email
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold capitalize text-muted-foreground">{order.payment_status}</span>
@@ -426,6 +499,26 @@ function OrdersTab() {
           ))}
         </div>
       )}
+
+      <Dialog open={Boolean(preview)} onOpenChange={(open) => !open && setPreview(null)}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Invite email preview</DialogTitle>
+          </DialogHeader>
+          {preview && (
+            <div className="space-y-3">
+              <p className="text-xs text-muted-foreground">
+                To: {preview.to} · Subject: {preview.subject}
+              </p>
+              <iframe
+                title="Invite email preview"
+                srcDoc={preview.html}
+                className="h-[60vh] w-full rounded-2xl border border-border bg-white"
+              />
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

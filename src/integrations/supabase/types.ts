@@ -81,6 +81,10 @@ export type Database = {
       }
       orders: {
         Row: {
+          access_email_attempts: number
+          access_email_error: string | null
+          access_email_sent_at: string | null
+          access_email_status: string
           approved_at: string | null
           approved_by: string | null
           coupon_code: string | null
@@ -107,6 +111,10 @@ export type Database = {
           utr: string | null
         }
         Insert: {
+          access_email_attempts?: number
+          access_email_error?: string | null
+          access_email_sent_at?: string | null
+          access_email_status?: string
           approved_at?: string | null
           approved_by?: string | null
           coupon_code?: string | null
@@ -133,6 +141,10 @@ export type Database = {
           utr?: string | null
         }
         Update: {
+          access_email_attempts?: number
+          access_email_error?: string | null
+          access_email_sent_at?: string | null
+          access_email_status?: string
           approved_at?: string | null
           approved_by?: string | null
           coupon_code?: string | null
@@ -320,6 +332,10 @@ export type Database = {
             }
             Returns: Json
           }
+      guest_email_context: {
+        Args: { p_email: string; p_order_ref: string }
+        Returns: Json
+      }
       guest_submit_utr: {
         Args: {
           p_email: string
@@ -351,6 +367,10 @@ export type Database = {
       is_valid_utr: { Args: { p_utr: string }; Returns: boolean }
       order_public_json: {
         Args: { o: Database["public"]["Tables"]["orders"]["Row"] }
+        Returns: Json
+      }
+      record_access_email_result: {
+        Args: { p_error?: string; p_order_id: string; p_status: string }
         Returns: Json
       }
     }
