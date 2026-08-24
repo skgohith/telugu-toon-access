@@ -41,14 +41,28 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
-const formSchema = z.object({
-  name: z.string().trim().min(2, "Enter your full name").max(80),
-  email: z.string().trim().email("Enter a valid email").max(160),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[0-9+\-\s]{8,15}$/, "Enter a valid mobile number"),
-});
+const handleRule = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/^@/, ""))
+  .refine((v) => v === "" || /^[A-Za-z0-9._]{2,40}$/.test(v), "Username can use letters, numbers, dot or underscore");
+
+const formSchema = z
+  .object({
+    name: z.string().trim().min(2, "Enter your full name").max(80),
+    email: z.string().trim().email("Enter a valid email").max(160),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^[0-9+\-\s]{8,15}$/, "Enter a valid mobile number"),
+    instagram: handleRule,
+    telegram: handleRule,
+  })
+  .refine((v) => v.instagram !== "" || v.telegram !== "", {
+    message: "Add your Instagram or Telegram username (at least one)",
+    path: ["instagram"],
+  });
+
 
 type CouponState = {
   code: string;
