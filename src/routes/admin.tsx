@@ -624,6 +624,85 @@ function CouponsTab() {
   );
 }
 
+/** Price-only editor — nothing else about a plan can be changed here. */
+function PricesTab() {
+  const queryClient = useQueryClient();
+  const { data: plans, isLoading } = useQuery({ queryKey: ["admin-plans"], queryFn: () => adminPlans() });
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+
+  const mutation = useMutation({
+    mutationFn: (input: { id: string; price: number }) => adminUpdatePlanPrice({ data: input }),
+    onSuccess: (_res, input) => {
+      toast.success("Price updated — the storefront now shows the new price.");
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[input.id];
+        return next;
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["plans"] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not update the price"),
+  });
+
+  if (isLoading) return <Spinner />;
+
+  return (
+    <div className="glass max-w-3xl rounded-3xl p-6">
+      <div className="flex items-start gap-3">
+        <BadgeIndianRupee className="mt-1 size-5 text-highlight" />
+        <div>
+          <h2 className="font-display text-lg font-bold">Plan prices</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Change only the price customers pay. Plan names, durations and features stay as they are.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-3">
+        {(plans ?? []).map((plan) => {
+          const draft = drafts[plan.id] ?? String(plan.price);
+          const changed = Number(draft) !== Number(plan.price);
+          return (
+            <div
+              key={plan.id}
+              className="flex flex-wrap items-end justify-between gap-4 rounded-3xl bg-muted/40 p-5"
+            >
+              <div>
+                <p className="font-display font-bold">{plan.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {plan.duration_label} · current price {inr(plan.price)} · {plan.active ? "active" : "inactive"}
+                </p>
+              </div>
+              <div className="flex items-end gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor={`price-${plan.id}`}>New price (₹)</Label>
+                  <Input
+                    id={`price-${plan.id}`}
+                    type="number"
+                    min={1}
+                    step="1"
+                    className="w-32"
+                    value={draft}
+                    onChange={(e) => setDrafts((prev) => ({ ...prev, [plan.id]: e.target.value }))}
+                  />
+                </div>
+                <Button
+                  variant="hero"
+                  disabled={!changed || mutation.isPending}
+                  onClick={() => mutation.mutate({ id: plan.id, price: Number(draft) })}
+                >
+                  {mutation.isPending ? <Loader2 className="animate-spin" /> : null} Save price
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 
 const SCOPES = [
   { value: "pending", label: "Clear pending orders" },
