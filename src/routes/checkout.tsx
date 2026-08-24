@@ -286,6 +286,39 @@ function CheckoutPage() {
                 </div>
               </div>
 
+              <div className="rounded-3xl bg-muted/40 p-4">
+                <p className="text-sm font-semibold">How can we reach you?</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Fill at least one — either your Instagram or your Telegram username (both is even better).
+                </p>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="instagram">Instagram username</Label>
+                    <Input
+                      id="instagram"
+                      value={form.instagram}
+                      maxLength={40}
+                      placeholder="@telugu_toon_fan"
+                      autoComplete="off"
+                      onChange={(e) => setForm({ ...form, instagram: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="telegram">Telegram username</Label>
+                    <Input
+                      id="telegram"
+                      value={form.telegram}
+                      maxLength={40}
+                      placeholder="@toonfan"
+                      autoComplete="off"
+                      onChange={(e) => setForm({ ...form, telegram: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+
+
               <div className="space-y-2">
                 <Label htmlFor="coupon">Coupon code (optional)</Label>
                 <div className="flex gap-2">
