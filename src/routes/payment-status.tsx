@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Clock, Loader2, PartyPopper, RefreshCw, Search, Send, XCircle } from "lucide-react";
+import { CheckCircle2, Clock, Loader2, Mail, MailX, PartyPopper, RefreshCw, Search, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label";
 import { dateTime, inr } from "@/lib/format";
 import { UTR_HINT, UTR_LENGTH, normalizeUtr, validateUtr } from "@/lib/utr";
 import { getTelegramAccess, submitUtr, trackOrder } from "@/lib/store.api";
+import { resendAccessEmail } from "@/lib/order-email.functions";
 
 
 
@@ -523,6 +524,62 @@ function Timeline({ order }: { order: TimelineOrder }) {
           </li>
         ))}
       </ol>
+    </div>
+  );
+}
+
+type EmailStatusValue = "not_sent" | "sending" | "sent" | "failed" | "suppressed";
+
+/** Shows whether the invite email reached the customer, with a resend fallback. */
+function EmailStatus({
+  status,
+  sentAt,
+  email,
+  pending,
+  onResend,
+}: {
+  status: EmailStatusValue;
+  sentAt: string | null;
+  email: string;
+  pending: boolean;
+  onResend: () => void;
+}) {
+  const map: Record<EmailStatusValue, { label: string; hint: string; tone: string; Icon: typeof Mail }> = {
+    sent: {
+      label: "Invite email sent",
+      hint: sentAt ? `Delivered to ${email} on ${dateTime(sentAt)}` : `Sent to ${email}`,
+      tone: "text-success",
+      Icon: Mail,
+    },
+    sending: { label: "Sending invite email…", hint: `Preparing your email to ${email}`, tone: "text-highlight", Icon: Loader2 },
+    not_sent: { label: "Invite email not sent yet", hint: `We will email ${email} shortly`, tone: "text-muted-foreground", Icon: Mail },
+    failed: { label: "Invite email failed", hint: `We could not deliver the email to ${email}`, tone: "text-destructive", Icon: MailX },
+    suppressed: {
+      label: "Invite email blocked",
+      hint: `${email} is not accepting our emails — use the Telegram button above`,
+      tone: "text-destructive",
+      Icon: MailX,
+    },
+  };
+  const view = map[status];
+  const showResend = status !== "sent" && status !== "sending";
+
+  return (
+    <div className="mt-6 rounded-2xl border border-border/60 bg-card/60 p-4 text-left">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <view.Icon className={`size-5 ${view.tone} ${status === "sending" ? "animate-spin" : ""}`} />
+          <div>
+            <p className={`text-sm font-semibold ${view.tone}`}>{view.label}</p>
+            <p className="text-xs text-muted-foreground">{view.hint}</p>
+          </div>
+        </div>
+        {showResend && (
+          <Button variant="glass" size="sm" onClick={onResend} disabled={pending}>
+            {pending ? <Loader2 className="animate-spin" /> : <RefreshCw />} Resend email
+          </Button>
+        )}
+      </div>
     </div>
   );
 }
