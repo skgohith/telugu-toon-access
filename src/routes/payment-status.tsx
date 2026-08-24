@@ -114,6 +114,18 @@ function PaymentStatusPage() {
     onError: (error) => toast.error(error instanceof Error ? error.message : "Could not fetch the invite link"),
   });
 
+  const resendMutation = useMutation({
+    mutationFn: () => resendAccessEmail({ data: { orderRef: ref!, email: email! } }),
+    onSuccess: (result) => {
+      if (result.status === "sent") toast.success("Invite email sent — check your inbox and spam folder.");
+      else if (result.status === "suppressed")
+        toast.error("Your email provider is blocking our messages. Use the Telegram button above instead.");
+      else toast.error(result.message ?? "Could not send the email. Please contact support.");
+      queryClient.invalidateQueries({ queryKey });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not send the email"),
+  });
+
   const utrLocked = utrMutation.isPending || justSubmitted;
   const utrCheck = validateUtr(utr);
 
