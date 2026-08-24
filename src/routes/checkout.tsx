@@ -456,6 +456,53 @@ function CheckoutPage() {
           </div>
         </div>
       </section>
+
+      <Dialog open={utrDialogOpen} onOpenChange={(open) => !open && setUtrDialogOpen(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter your {UTR_LENGTH}-digit UTR</DialogTitle>
+            <DialogDescription>
+              Open your UPI app’s transaction details and copy the UTR / reference number. Your order is created only
+              after you submit it.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submit(event);
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="utr-popup">UTR / transaction reference</Label>
+              <Input
+                id="utr-popup"
+                value={utr}
+                inputMode="numeric"
+                maxLength={UTR_LENGTH}
+                placeholder="402312345678"
+                autoFocus
+                aria-invalid={utr.length > 0 && !utrCheck.ok}
+                onChange={(e) => setUtr(normalizeUtr(e.target.value))}
+                disabled={locked}
+              />
+              <p className={`text-xs ${utr.length > 0 && !utrCheck.ok ? "text-destructive" : "text-muted-foreground"}`}>
+                {utr.length > 0 && !utrCheck.ok ? utrCheck.message : `${UTR_HINT}. Each UTR can be used only once.`}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button type="submit" variant="hero" className="flex-1" disabled={locked || !utrCheck.ok}>
+                {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
+                {stage ?? (submitted ? "Submitted…" : "Submit payment details")}
+              </Button>
+              <Button type="button" variant="glass" onClick={() => setUtrDialogOpen(false)} disabled={locked}>
+                Not yet paid
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
     </SiteLayout>
   );
 }
