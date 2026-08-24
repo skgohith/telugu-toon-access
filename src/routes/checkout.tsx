@@ -135,6 +135,7 @@ function CheckoutPage() {
     onSuccess: (order) => {
       setSubmitted(true);
       setStage(null);
+      setUtrDialogOpen(false);
       toast.success("Payment details submitted — the admin will verify shortly.");
       navigate({ to: "/payment-status", search: { ref: order.order_ref, email: order.customer_email } });
     },
