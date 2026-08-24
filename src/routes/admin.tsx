@@ -119,6 +119,8 @@ function AdminPage() {
     if (!loading && !user) navigate({ to: "/auth", search: { redirect: "/admin" } });
   }, [loading, user, navigate]);
 
+  const [activeSection, setActiveSection] = useState<(typeof ADMIN_SECTIONS)[number]["value"]>("overview");
+
   const { data: me, isLoading } = useQuery({
     queryKey: ["me", user?.id],
     queryFn: () => myProfile(),
@@ -149,8 +151,6 @@ function AdminPage() {
       </SiteLayout>
     );
   }
-
-  const [activeSection, setActiveSection] = useState<(typeof ADMIN_SECTIONS)[number]["value"]>("overview");
 
   return (
     <SiteLayout>
