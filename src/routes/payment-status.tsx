@@ -1,17 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { CheckCircle2, Clock, Loader2, RefreshCw, Search, Send, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Clock, Loader2, PartyPopper, RefreshCw, Search, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { dateTime, inr } from "@/lib/format";
-import { UTR_HINT, normalizeUtr, validateUtr } from "@/lib/utr";
+import { UTR_HINT, UTR_LENGTH, normalizeUtr, validateUtr } from "@/lib/utr";
 import { getTelegramAccess, submitUtr, trackOrder } from "@/lib/store.api";
+
 
 
 const searchSchema = z.object({
@@ -44,6 +46,10 @@ function PaymentStatusPage() {
   const [attemptedUtrs, setAttemptedUtrs] = useState<string[]>([]);
   const [link, setLink] = useState<string | null>(null);
   const [justSubmitted, setJustSubmitted] = useState(false);
+  const [waitOpen, setWaitOpen] = useState(false);
+  const [thanksOpen, setThanksOpen] = useState(false);
+  const previousStatus = useRef<string | null>(null);
+  const waitDismissed = useRef(false);
 
 
   const enabled = Boolean(ref && email);
@@ -53,8 +59,35 @@ function PaymentStatusPage() {
     queryKey,
     queryFn: () => trackOrder({ data: { orderRef: ref!, email: email! } }),
     enabled,
-    refetchInterval: 20000,
+    refetchInterval: 8000,
   });
+
+  /** Waiting popup while the admin reviews, celebration popup the moment it is approved. */
+  useEffect(() => {
+    if (!order) return;
+    const previous = previousStatus.current;
+    previousStatus.current = order.payment_status;
+
+    if (order.payment_status === "pending" && order.utr) {
+      if (!waitDismissed.current) setWaitOpen(true);
+      return;
+    }
+
+    setWaitOpen(false);
+    if (order.payment_status === "completed" && previous !== "completed") setThanksOpen(true);
+  }, [order]);
+
+  /** Nudge if they try to close the tab while verification is still running. */
+  useEffect(() => {
+    if (!waitOpen) return;
+    function warn(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [waitOpen]);
+
 
   const utrMutation = useMutation({
     mutationFn: () => submitUtr({ data: { orderRef: ref!, email: email!, utr, proofPath: null } }),
@@ -238,8 +271,10 @@ function PaymentStatusPage() {
                     <Input
                       id="utr"
                       value={utr}
-                      maxLength={40}
-                      placeholder="e.g. 402312345678"
+                      inputMode="numeric"
+                      maxLength={UTR_LENGTH}
+                      placeholder="402312345678"
+
                       aria-invalid={utr.length > 0 && !utrCheck.ok}
                       aria-describedby="status-utr-help"
                       onChange={(e) => setUtr(normalizeUtr(e.target.value))}
@@ -311,8 +346,60 @@ function PaymentStatusPage() {
           </div>
         )}
       </section>
+
+      <Dialog
+        open={waitOpen}
+        onOpenChange={(open) => {
+          if (!open) {
+            waitDismissed.current = true;
+            setWaitOpen(false);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2 text-highlight">
+              <Loader2 className="size-5 animate-spin" /> Please don’t leave this page
+            </DialogTitle>
+            <DialogDescription>
+              Your payment reference {order?.utr ? `(${order.utr})` : ""} has been sent to the admin. Do not refresh or
+              close this page — we’re waiting for the confirmation and this page updates automatically.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-xs text-muted-foreground">
+            Order {order?.order_ref}. Verification is usually done within a few hours — you can safely return later with
+            your reference if it takes longer.
+          </p>
+          <Button
+            type="button"
+            variant="glass"
+            onClick={() => queryClient.invalidateQueries({ queryKey })}
+            disabled={isFetching}
+          >
+            {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />} Check now
+          </Button>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={thanksOpen} onOpenChange={setThanksOpen}>
+        <DialogContent className="sm:max-w-md text-center">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-center gap-2 text-success">
+              <PartyPopper className="size-5" /> Thanks for purchasing!
+            </DialogTitle>
+            <DialogDescription>
+              Your payment is verified{order ? ` for ${order.plan_name}` : ""}. Your private Telegram invite is ready —
+              welcome to Telugu-Toon-World.
+            </DialogDescription>
+          </DialogHeader>
+          <Button variant="hero" onClick={() => linkMutation.mutate()} disabled={linkMutation.isPending}>
+            {linkMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle2 />} Join Telegram channel
+          </Button>
+        </DialogContent>
+      </Dialog>
     </SiteLayout>
   );
+
 }
 
 function Row({ label, value }: { label: string; value: string }) {

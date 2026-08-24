@@ -1,20 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Copy, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { inr } from "@/lib/format";
 import { createPaidOrder, getPaymentDetails, validateCoupon } from "@/lib/store.api";
 
 import { plansQueryOptions } from "@/lib/plans";
-import { UTR_HINT, normalizeUtr, validateUtr } from "@/lib/utr";
+import { UTR_HINT, UTR_LENGTH, normalizeUtr, validateUtr } from "@/lib/utr";
 import upiQr from "@/assets/upi-qr.jpg";
+
 
 
 const searchSchema = z.object({ planId: z.string().optional() });
@@ -72,6 +74,27 @@ function CheckoutPage() {
   const [utr, setUtr] = useState("");
   const [attemptedUtrs, setAttemptedUtrs] = useState<string[]>([]);
   const [stage, setStage] = useState<string | null>(null);
+  const [awaitingReturn, setAwaitingReturn] = useState(false);
+  const [utrDialogOpen, setUtrDialogOpen] = useState(false);
+
+  /** When the customer comes back from their UPI app, ask for the UTR right away. */
+  useEffect(() => {
+    if (!awaitingReturn) return;
+    function onBack() {
+      if (document.visibilityState !== "visible") return;
+      setAwaitingReturn(false);
+      setHasPaid(true);
+      setUtrDialogOpen(true);
+    }
+    document.addEventListener("visibilitychange", onBack);
+    window.addEventListener("focus", onBack);
+    return () => {
+      document.removeEventListener("visibilitychange", onBack);
+      window.removeEventListener("focus", onBack);
+    };
+  }, [awaitingReturn]);
+
+
 
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
@@ -112,6 +135,7 @@ function CheckoutPage() {
     onSuccess: (order) => {
       setSubmitted(true);
       setStage(null);
+      setUtrDialogOpen(false);
       toast.success("Payment details submitted — the admin will verify shortly.");
       navigate({ to: "/payment-status", search: { ref: order.order_ref, email: order.customer_email } });
     },
@@ -184,10 +208,13 @@ function CheckoutPage() {
   function payWithApp(scheme: string, label: string) {
     if (locked) return;
     setOpeningApp(label);
+    setAwaitingReturn(true);
     window.location.href = buildUpiLink(scheme);
     toast.success(`Opening ${label} — after paying, come back here and enter your UTR.`);
     window.setTimeout(() => setOpeningApp(null), 4000);
   }
+
+
 
 
 
@@ -303,12 +330,13 @@ function CheckoutPage() {
                   </p>
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="utr">UTR / transaction reference</Label>
+                  <Label htmlFor="utr">UTR / transaction reference ({UTR_LENGTH} digits)</Label>
                   <Input
                     id="utr"
                     value={utr}
-                    maxLength={40}
-                    placeholder="e.g. 402312345678"
+                    inputMode="numeric"
+                    maxLength={UTR_LENGTH}
+                    placeholder="402312345678"
                     aria-invalid={utr.length > 0 && !utrCheck.ok}
                     aria-describedby="utr-help"
                     onChange={(e) => setUtr(normalizeUtr(e.target.value))}
@@ -321,6 +349,7 @@ function CheckoutPage() {
                     {utr.length > 0 && !utrCheck.ok ? utrCheck.message : `${UTR_HINT}. Each UTR can be used only once.`}
                   </p>
                 </div>
+
                 <Button type="submit" variant="hero" size="lg" className="w-full" disabled={locked || !utrCheck.ok}>
                   {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
                   {stage ?? (submitted ? "Submitted — redirecting…" : "Submit payment details")}
@@ -427,6 +456,53 @@ function CheckoutPage() {
           </div>
         </div>
       </section>
+
+      <Dialog open={utrDialogOpen} onOpenChange={(open) => !open && setUtrDialogOpen(false)}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter your {UTR_LENGTH}-digit UTR</DialogTitle>
+            <DialogDescription>
+              Open your UPI app’s transaction details and copy the UTR / reference number. Your order is created only
+              after you submit it.
+            </DialogDescription>
+          </DialogHeader>
+          <form
+            className="space-y-4"
+            onSubmit={(event) => {
+              event.preventDefault();
+              submit(event);
+            }}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="utr-popup">UTR / transaction reference</Label>
+              <Input
+                id="utr-popup"
+                value={utr}
+                inputMode="numeric"
+                maxLength={UTR_LENGTH}
+                placeholder="402312345678"
+                autoFocus
+                aria-invalid={utr.length > 0 && !utrCheck.ok}
+                onChange={(e) => setUtr(normalizeUtr(e.target.value))}
+                disabled={locked}
+              />
+              <p className={`text-xs ${utr.length > 0 && !utrCheck.ok ? "text-destructive" : "text-muted-foreground"}`}>
+                {utr.length > 0 && !utrCheck.ok ? utrCheck.message : `${UTR_HINT}. Each UTR can be used only once.`}
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 sm:flex-row">
+              <Button type="submit" variant="hero" className="flex-1" disabled={locked || !utrCheck.ok}>
+                {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
+                {stage ?? (submitted ? "Submitted…" : "Submit payment details")}
+              </Button>
+              <Button type="button" variant="glass" onClick={() => setUtrDialogOpen(false)} disabled={locked}>
+                Not yet paid
+              </Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
     </SiteLayout>
   );
 }

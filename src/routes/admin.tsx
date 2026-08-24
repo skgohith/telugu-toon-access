@@ -51,6 +51,8 @@ import {
   adminProofUrl,
   adminSaveCoupon,
   adminSetOrderStatus,
+  adminUpdatePlanPrice,
+
 } from "@/lib/admin.api";
 
 export const Route = createFileRoute("/admin")({
@@ -129,11 +131,22 @@ function AdminPage() {
         </div>
 
         <Tabs defaultValue="overview" className="mt-8">
-          <TabsList className="flex w-full flex-wrap justify-start">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="coupons">Coupons</TabsTrigger>
-            <TabsTrigger value="data">Data</TabsTrigger>
+          <TabsList className="glass flex w-full flex-wrap justify-start gap-1 rounded-full p-1">
+            <TabsTrigger value="overview" className="rounded-full px-4">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="rounded-full px-4">
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="prices" className="rounded-full px-4">
+              Plan prices
+            </TabsTrigger>
+            <TabsTrigger value="coupons" className="rounded-full px-4">
+              Coupons
+            </TabsTrigger>
+            <TabsTrigger value="data" className="rounded-full px-4">
+              Data
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -142,6 +155,9 @@ function AdminPage() {
           <TabsContent value="orders" className="mt-6">
             <OrdersTab />
           </TabsContent>
+          <TabsContent value="prices" className="mt-6">
+            <PricesTab />
+          </TabsContent>
           <TabsContent value="coupons" className="mt-6">
             <CouponsTab />
           </TabsContent>
@@ -149,6 +165,7 @@ function AdminPage() {
             <DataTab />
           </TabsContent>
         </Tabs>
+
       </section>
     </SiteLayout>
   );
@@ -602,6 +619,85 @@ function CouponsTab() {
             ))}
           </ul>
         )}
+      </div>
+    </div>
+  );
+}
+
+/** Price-only editor — nothing else about a plan can be changed here. */
+function PricesTab() {
+  const queryClient = useQueryClient();
+  const { data: plans, isLoading } = useQuery({ queryKey: ["admin-plans"], queryFn: () => adminPlans() });
+  const [drafts, setDrafts] = useState<Record<string, string>>({});
+
+  const mutation = useMutation({
+    mutationFn: (input: { id: string; price: number }) => adminUpdatePlanPrice({ data: input }),
+    onSuccess: (_res, input) => {
+      toast.success("Price updated — the storefront now shows the new price.");
+      setDrafts((prev) => {
+        const next = { ...prev };
+        delete next[input.id];
+        return next;
+      });
+      queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
+      queryClient.invalidateQueries({ queryKey: ["plans"] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not update the price"),
+  });
+
+  if (isLoading) return <Spinner />;
+
+  return (
+    <div className="glass max-w-3xl rounded-3xl p-6">
+      <div className="flex items-start gap-3">
+        <BadgeIndianRupee className="mt-1 size-5 text-highlight" />
+        <div>
+          <h2 className="font-display text-lg font-bold">Plan prices</h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Change only the price customers pay. Plan names, durations and features stay as they are.
+          </p>
+        </div>
+      </div>
+
+      <div className="mt-6 space-y-3">
+        {(plans ?? []).map((plan) => {
+          const draft = drafts[plan.id] ?? String(plan.price);
+          const changed = Number(draft) !== Number(plan.price);
+          return (
+            <div
+              key={plan.id}
+              className="flex flex-wrap items-end justify-between gap-4 rounded-3xl bg-muted/40 p-5"
+            >
+              <div>
+                <p className="font-display font-bold">{plan.name}</p>
+                <p className="text-xs text-muted-foreground">
+                  {plan.duration_label} · current price {inr(plan.price)} · {plan.active ? "active" : "inactive"}
+                </p>
+              </div>
+              <div className="flex items-end gap-3">
+                <div className="space-y-2">
+                  <Label htmlFor={`price-${plan.id}`}>New price (₹)</Label>
+                  <Input
+                    id={`price-${plan.id}`}
+                    type="number"
+                    min={1}
+                    step="1"
+                    className="w-32"
+                    value={draft}
+                    onChange={(e) => setDrafts((prev) => ({ ...prev, [plan.id]: e.target.value }))}
+                  />
+                </div>
+                <Button
+                  variant="hero"
+                  disabled={!changed || mutation.isPending}
+                  onClick={() => mutation.mutate({ id: plan.id, price: Number(draft) })}
+                >
+                  {mutation.isPending ? <Loader2 className="animate-spin" /> : null} Save price
+                </Button>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
