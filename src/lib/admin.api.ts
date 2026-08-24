@@ -296,3 +296,23 @@ export async function adminProofUrl(input: { data: { orderId: string } }) {
   if (signError || !signed) return { ok: false as const, message: signError?.message ?? "Could not open the proof." };
   return { ok: true as const, url: signed.signedUrl };
 }
+
+/** Payment details shown on checkout (UPI ID, payee name, QR image link). */
+export async function adminPaymentSettings(): Promise<{ upiId: string; payeeName: string; qrUrl: string }> {
+  const { data, error } = await rpc("get_payment_settings");
+  if (error) throw new Error(error.message);
+  const d = (data ?? {}) as { upiId?: string; payeeName?: string; qrUrl?: string };
+  return { upiId: d.upiId ?? "", payeeName: d.payeeName ?? "", qrUrl: d.qrUrl ?? "" };
+}
+
+export async function adminSavePaymentSettings(input: {
+  data: { upiId: string; payeeName: string; qrUrl: string };
+}) {
+  const { error } = await rpc("admin_set_payment_settings", {
+    p_upi_id: input.data.upiId,
+    p_payee_name: input.data.payeeName,
+    p_qr_url: input.data.qrUrl,
+  });
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}

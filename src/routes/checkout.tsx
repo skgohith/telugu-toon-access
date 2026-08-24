@@ -106,6 +106,8 @@ function CheckoutPage() {
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
   const upiId = payment?.upiId ?? "9848779490@fam";
+  const payeeName = payment?.payeeName || "BOLLOJI HEMANTH";
+  const qrSrc = payment?.qrUrl || upiQr;
 
   const couponMutation = useMutation({
     mutationFn: () => validateCoupon({ data: { planId: plan!.id, code: couponCode } }),
@@ -158,7 +160,7 @@ function CheckoutPage() {
   function buildUpiLink(scheme: string) {
     const params = new URLSearchParams({
       pa: upiId,
-      pn: "Telugu-Toon-World",
+      pn: payeeName,
       am: String(amountDue),
       cu: "INR",
       tn: `${plan!.name} access`,
@@ -407,12 +409,12 @@ function CheckoutPage() {
                 Step 2 of 3 — scan the QR, use the UPI ID, or tap a UPI app.
               </p>
               <img
-                src={upiQr}
-                alt={`UPI QR code for BOLLOJI HEMANTH (${upiId}) — scan to pay ${inr(amountDue)}`}
+                src={qrSrc}
+                alt={`UPI QR code for ${payeeName} (${upiId}) — scan to pay ${inr(amountDue)}`}
                 className="mx-auto mt-5 w-52 rounded-3xl bg-card p-2"
                 loading="lazy"
               />
-              <p className="mt-2 text-xs font-semibold">BOLLOJI HEMANTH</p>
+              <p className="mt-2 text-xs font-semibold">{payeeName}</p>
 
               <div className="mt-5 flex items-center justify-center gap-2">
                 <code className="rounded-full bg-muted px-4 py-2 text-sm font-semibold">{upiId}</code>

@@ -296,6 +296,11 @@ export type Database = {
         Args: { p_order_id: string; p_status: string }
         Returns: Json
       }
+      admin_set_payment_settings: {
+        Args: { p_payee_name: string; p_qr_url: string; p_upi_id: string }
+        Returns: Json
+      }
+      get_payment_settings: { Args: never; Returns: Json }
       get_upi_id: { Args: never; Returns: string }
       guest_create_order: {
         Args: {
