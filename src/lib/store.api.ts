@@ -77,11 +77,18 @@ export async function listPlans(): Promise<PublicPlan[]> {
   return (data ?? []) as unknown as PublicPlan[];
 }
 
-export async function getPaymentDetails(): Promise<{ upiId: string }> {
-  const { data, error } = await rpc("get_upi_id");
-  if (error) return { upiId: "9848779490@fam" };
-  return { upiId: (data as string | null) ?? "9848779490@fam" };
+export async function getPaymentDetails(): Promise<{ upiId: string; payeeName: string; qrUrl: string }> {
+  const fallback = { upiId: "9848779490@fam", payeeName: "BOLLOJI HEMANTH", qrUrl: "" };
+  const { data, error } = await rpc("get_payment_settings");
+  if (error || !data) return fallback;
+  const d = data as Partial<typeof fallback>;
+  return {
+    upiId: d.upiId || fallback.upiId,
+    payeeName: d.payeeName || fallback.payeeName,
+    qrUrl: d.qrUrl || "",
+  };
 }
+
 
 export async function validateCoupon(input: { data: { planId: string; code: string } }): Promise<CouponResult> {
   const { data, error } = await rpc("guest_validate_coupon", {
