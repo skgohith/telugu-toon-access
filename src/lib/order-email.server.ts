@@ -32,6 +32,18 @@ function guestClient() {
 
 type Json = Record<string, unknown>;
 
+/** Turns raw email-provider errors into a short sentence an admin can act on. */
+export function friendlyEmailError(error: unknown): string {
+  const raw = error instanceof Error ? error.message : String(error ?? "");
+  if (/domain_not_verified|domain is not verified/i.test(raw)) {
+    return "Sending domain is not verified yet — finish the email DNS setup, then resend.";
+  }
+  if (/rate.?limit/i.test(raw)) return "Email rate limit reached — try resending in a few minutes.";
+  if (/LOVABLE_API_KEY/i.test(raw)) return "Email service is not configured on the server.";
+  if (/invalid.*(email|recipient)/i.test(raw)) return "The customer's email address looks invalid.";
+  return raw.length > 160 ? `${raw.slice(0, 160)}…` : raw || "Email delivery failed.";
+}
+
 /** Loads the invite-email context for an approved order (order ref + email verified). */
 export async function loadEmailContext(orderRef: string, email: string): Promise<Json> {
   const client = guestClient();
@@ -106,7 +118,7 @@ export async function sendInviteEmail(
     await recordResult(orderId, "sent");
     return { status: "sent" };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Email delivery failed.";
+    const message = friendlyEmailError(error);
     await recordResult(orderId, "failed", message);
     return { status: "failed", message };
   }
