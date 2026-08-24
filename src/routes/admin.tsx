@@ -308,7 +308,10 @@ function OrdersTab() {
       await adminSetOrderStatus({ data: input });
       if (input.status === "completed") {
         try {
-          await sendAccessEmail({ data: { orderId: input.orderId } });
+          const email = await sendAccessEmail({ data: { orderId: input.orderId } });
+          if (email.status !== "sent") {
+            toast.warning("Access unlocked, but the invite email was not delivered — try Resend email.");
+          }
         } catch {
           toast.warning("Access unlocked, but the invite email could not be sent.");
         }
