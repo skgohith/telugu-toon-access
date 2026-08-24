@@ -58,6 +58,7 @@ export type AdminPlan = {
   active: boolean;
   recommended: boolean;
   sort_order: number;
+  telegram_link: string | null;
 };
 
 const ADMIN_ORDER_COLUMNS =
@@ -200,7 +201,7 @@ export async function adminDeleteCoupon(input: { data: { id: string } }) {
 export async function adminPlans(): Promise<AdminPlan[]> {
   const { data, error } = await supabase
     .from("plans")
-    .select("id, name, price, duration_days, duration_label, description, features, active, recommended, sort_order")
+    .select("id, name, price, duration_days, duration_label, description, features, active, recommended, sort_order, telegram_link")
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as AdminPlan[];
@@ -220,6 +221,53 @@ export async function adminUpdatePlanPrice(input: { data: { id: string; price: n
   return { ok: true as const };
 }
 
+
+/** Full plan editor — updates every customer-visible field of a plan. */
+export async function adminSavePlan(input: {
+  data: {
+    id: string;
+    name: string;
+    price: number;
+    durationDays: number;
+    durationLabel: string;
+    description: string;
+    features: string[];
+    telegramLink: string;
+    active: boolean;
+    recommended: boolean;
+    sortOrder: number;
+  };
+}) {
+  const d = input.data;
+  const name = d.name.trim();
+  const price = Number(d.price);
+  const durationDays = Math.round(Number(d.durationDays));
+  const link = d.telegramLink.trim();
+
+  if (name.length < 2) throw new Error("Enter a plan name.");
+  if (!Number.isFinite(price) || price <= 0) throw new Error("Enter a price greater than zero.");
+  if (price > 1_000_000) throw new Error("That price looks too high.");
+  if (!Number.isFinite(durationDays) || durationDays < 1) throw new Error("Duration must be at least 1 day.");
+  if (link && !/^https?:\/\//i.test(link)) throw new Error("The Telegram link must start with https://");
+
+  const { error } = await supabase
+    .from("plans")
+    .update({
+      name,
+      price: Math.round(price * 100) / 100,
+      duration_days: durationDays,
+      duration_label: d.durationLabel.trim(),
+      description: d.description.trim(),
+      features: d.features.map((f) => f.trim()).filter(Boolean),
+      telegram_link: link || null,
+      active: d.active,
+      recommended: d.recommended,
+      sort_order: Math.round(Number(d.sortOrder)) || 0,
+    })
+    .eq("id", d.id);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}
 
 export async function adminClearData(input: {
   data: { scope: "pending" | "completed" | "rejected" | "coupons" | "customers" | "all"; confirmText: "DELETE" };
