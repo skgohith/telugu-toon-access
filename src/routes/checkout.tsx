@@ -74,6 +74,27 @@ function CheckoutPage() {
   const [utr, setUtr] = useState("");
   const [attemptedUtrs, setAttemptedUtrs] = useState<string[]>([]);
   const [stage, setStage] = useState<string | null>(null);
+  const [awaitingReturn, setAwaitingReturn] = useState(false);
+  const [utrDialogOpen, setUtrDialogOpen] = useState(false);
+
+  /** When the customer comes back from their UPI app, ask for the UTR right away. */
+  useEffect(() => {
+    if (!awaitingReturn) return;
+    function onBack() {
+      if (document.visibilityState !== "visible") return;
+      setAwaitingReturn(false);
+      setHasPaid(true);
+      setUtrDialogOpen(true);
+    }
+    document.addEventListener("visibilitychange", onBack);
+    window.addEventListener("focus", onBack);
+    return () => {
+      document.removeEventListener("visibilitychange", onBack);
+      window.removeEventListener("focus", onBack);
+    };
+  }, [awaitingReturn]);
+
+
 
 
   const amountDue = coupon ? coupon.finalAmount : Number(plan?.price ?? 0);
