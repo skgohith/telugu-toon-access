@@ -45,7 +45,22 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarGroupContent,
+  SidebarHeader,
+  SidebarInset,
+  SidebarMenu,
+  SidebarMenuButton,
+  SidebarMenuItem,
+  SidebarProvider,
+  SidebarRail,
+  SidebarTrigger,
+  useSidebar,
+} from "@/components/ui/sidebar";
 import { useAuth } from "@/hooks/useAuth";
 import { dateOnly, dateTime, inr } from "@/lib/format";
 import { myProfile } from "@/lib/store.api";
@@ -65,8 +80,8 @@ import {
   adminUpdatePlanPrice,
   adminPaymentSettings,
   adminSavePaymentSettings,
-
 } from "@/lib/admin.api";
+import { cn } from "@/lib/utils";
 import { previewAccessEmail, sendAccessEmail } from "@/lib/order-email.functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
@@ -135,67 +150,117 @@ function AdminPage() {
     );
   }
 
+  const [activeSection, setActiveSection] = useState<(typeof ADMIN_SECTIONS)[number]["value"]>("overview");
+
   return (
     <SiteLayout>
-      <section className="mx-auto w-full max-w-7xl px-4 py-12 sm:px-6">
-        <div className="flex flex-wrap items-end justify-between gap-4">
-          <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">Admin panel</p>
-            <h1 className="mt-1 text-3xl font-extrabold sm:text-4xl">
-              Manage <span className="text-gradient">Telugu-Toon-World</span>
-            </h1>
-          </div>
-          <Button
-            variant="glass"
-            onClick={async () => {
-              await signOut();
-              navigate({ to: "/auth", replace: true });
-            }}
-          >
-            <LogOut className="size-4" /> Logout
-          </Button>
+      <SidebarProvider defaultOpen={true}>
+        <div className="flex min-h-[calc(100vh-4rem)] w-full">
+          <AdminSidebar activeSection={activeSection} onSelect={setActiveSection} />
+
+          <SidebarInset className="flex-1">
+            <section className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6">
+              <div className="flex flex-wrap items-center justify-between gap-4">
+                <div className="flex items-center gap-3">
+                  <SidebarTrigger className="shrink-0" />
+                  <div>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Admin panel</p>
+                    <h1 className="text-2xl font-extrabold sm:text-3xl">
+                      Manage <span className="text-gradient">Telugu-Toon-World</span>
+                    </h1>
+                  </div>
+                </div>
+                <Button
+                  variant="glass"
+                  size="sm"
+                  onClick={async () => {
+                    await signOut();
+                    navigate({ to: "/auth", replace: true });
+                  }}
+                >
+                  <LogOut className="size-4" /> Logout
+                </Button>
+              </div>
+
+              <div className="mt-8">
+                {activeSection === "overview" && <OverviewTab />}
+                {activeSection === "orders" && <OrdersTab />}
+                {activeSection === "prices" && <PricesTab />}
+                {activeSection === "plans" && <PlansTab />}
+                {activeSection === "coupons" && <CouponsTab />}
+                {activeSection === "payment" && <PaymentTab />}
+                {activeSection === "data" && <DataTab />}
+              </div>
+            </section>
+          </SidebarInset>
         </div>
-
-        <Tabs defaultValue="overview" orientation="vertical" className="mt-8 gap-6 lg:flex lg:items-start">
-          <TabsList className="glass flex w-full flex-row gap-1 overflow-x-auto rounded-3xl p-2 lg:sticky lg:top-24 lg:w-56 lg:flex-col lg:overflow-visible">
-            {ADMIN_SECTIONS.map(({ value, label, icon: Icon }) => (
-              <TabsTrigger
-                key={value}
-                value={value}
-                className="shrink-0 justify-start gap-2 rounded-2xl px-4 py-2.5 text-sm lg:w-full"
-              >
-                <Icon className="size-4" /> {label}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-
-          <div className="min-w-0 flex-1">
-            <TabsContent value="overview" className="mt-6 lg:mt-0">
-              <OverviewTab />
-            </TabsContent>
-            <TabsContent value="orders" className="mt-6 lg:mt-0">
-              <OrdersTab />
-            </TabsContent>
-            <TabsContent value="prices" className="mt-6 lg:mt-0">
-              <PricesTab />
-            </TabsContent>
-            <TabsContent value="plans" className="mt-6 lg:mt-0">
-              <PlansTab />
-            </TabsContent>
-            <TabsContent value="coupons" className="mt-6 lg:mt-0">
-              <CouponsTab />
-            </TabsContent>
-            <TabsContent value="payment" className="mt-6 lg:mt-0">
-              <PaymentTab />
-            </TabsContent>
-            <TabsContent value="data" className="mt-6 lg:mt-0">
-              <DataTab />
-            </TabsContent>
-          </div>
-        </Tabs>
-
-      </section>
+      </SidebarProvider>
     </SiteLayout>
+  );
+}
+
+function AdminSidebar({
+  activeSection,
+  onSelect,
+}: {
+  activeSection: (typeof ADMIN_SECTIONS)[number]["value"];
+  onSelect: (value: (typeof ADMIN_SECTIONS)[number]["value"]) => void;
+}) {
+  const { state } = useSidebar();
+  const collapsed = state === "collapsed";
+
+  return (
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar">
+      <SidebarHeader className="p-4">
+        <div className={cn("flex items-center gap-2", collapsed && "justify-center")}>
+          <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-highlight text-primary-foreground font-display font-bold">
+            T
+          </div>
+          {!collapsed && (
+            <div className="min-w-0">
+              <p className="truncate font-display font-bold leading-tight">Telugu-Toon</p>
+              <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">Admin</p>
+            </div>
+          )}
+        </div>
+      </SidebarHeader>
+
+      <SidebarContent className="px-2">
+        <SidebarGroup>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {ADMIN_SECTIONS.map(({ value, label, icon: Icon }) => (
+                <SidebarMenuItem key={value}>
+                  <SidebarMenuButton
+                    isActive={activeSection === value}
+                    onClick={() => onSelect(value)}
+                    tooltip={label}
+                    className="gap-3"
+                  >
+                    <Icon className="size-4" />
+                    <span>{label}</span>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+      </SidebarContent>
+
+      <SidebarFooter className="p-2">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton asChild tooltip="Back to site">
+              <Link to="/">
+                <LogOut className="size-4" />
+                <span>Back to site</span>
+              </Link>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarFooter>
+      <SidebarRail />
+    </Sidebar>
   );
 }
 
