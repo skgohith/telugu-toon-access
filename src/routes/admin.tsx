@@ -444,9 +444,6 @@ function OrdersTab() {
                             ? "not sent yet"
                             : order.access_email_status}
                       </span>
-                      {order.access_email_error ? (
-                        <span className="mt-0.5 block line-clamp-2 text-destructive">{order.access_email_error}</span>
-                      ) : null}
                     </p>
                   )}
                   <div className="mt-2 flex flex-wrap gap-2">
