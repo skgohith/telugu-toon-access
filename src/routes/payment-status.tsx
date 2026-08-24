@@ -271,8 +271,10 @@ function PaymentStatusPage() {
                     <Input
                       id="utr"
                       value={utr}
-                      maxLength={40}
-                      placeholder="e.g. 402312345678"
+                      inputMode="numeric"
+                      maxLength={UTR_LENGTH}
+                      placeholder="402312345678"
+
                       aria-invalid={utr.length > 0 && !utrCheck.ok}
                       aria-describedby="status-utr-help"
                       onChange={(e) => setUtr(normalizeUtr(e.target.value))}
