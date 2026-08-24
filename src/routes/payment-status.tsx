@@ -46,7 +46,9 @@ function PaymentStatusPage() {
   const [attemptedUtrs, setAttemptedUtrs] = useState<string[]>([]);
   const [link, setLink] = useState<string | null>(null);
   const [justSubmitted, setJustSubmitted] = useState(false);
-
+  const [waitOpen, setWaitOpen] = useState(false);
+  const [thanksOpen, setThanksOpen] = useState(false);
+  const previousStatus = useRef<string | null>(null);
 
   const enabled = Boolean(ref && email);
   const queryKey = ["track-order", ref, email];
@@ -55,8 +57,34 @@ function PaymentStatusPage() {
     queryKey,
     queryFn: () => trackOrder({ data: { orderRef: ref!, email: email! } }),
     enabled,
-    refetchInterval: 20000,
+    refetchInterval: 8000,
   });
+
+  /** Waiting popup while the admin reviews, celebration popup the moment it is approved. */
+  useEffect(() => {
+    if (!order) return;
+    const previous = previousStatus.current;
+    previousStatus.current = order.payment_status;
+
+    if (order.payment_status === "pending" && order.utr) {
+      setWaitOpen(true);
+      return;
+    }
+    setWaitOpen(false);
+    if (order.payment_status === "completed" && previous !== "completed") setThanksOpen(true);
+  }, [order]);
+
+  /** Nudge if they try to close the tab while verification is still running. */
+  useEffect(() => {
+    if (!waitOpen) return;
+    function warn(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [waitOpen]);
+
 
   const utrMutation = useMutation({
     mutationFn: () => submitUtr({ data: { orderRef: ref!, email: email!, utr, proofPath: null } }),
