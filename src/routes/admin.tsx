@@ -386,17 +386,59 @@ function OrdersTab() {
                     {order.coupon_code ? ` · coupon ${order.coupon_code}` : ""} · {dateTime(order.created_at)}
                   </p>
                   <p className="mt-1 text-xs font-semibold text-highlight">UTR: {order.utr ?? "not submitted"}</p>
-                  {order.proof_path && (
-                    <Button
-                      size="sm"
-                      variant="glass"
-                      className="mt-2"
-                      onClick={() => proofMutation.mutate({ orderId: order.id })}
-                      disabled={proofMutation.isPending}
-                    >
-                      <ImageUp /> View payment proof
-                    </Button>
+                  {order.payment_status === "completed" && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      Invite email:{" "}
+                      <span
+                        className={
+                          order.access_email_status === "sent"
+                            ? "font-semibold text-success"
+                            : order.access_email_status === "failed" || order.access_email_status === "suppressed"
+                              ? "font-semibold text-destructive"
+                              : "font-semibold text-highlight"
+                        }
+                      >
+                        {order.access_email_status === "sent"
+                          ? `sent${order.access_email_sent_at ? ` · ${dateTime(order.access_email_sent_at)}` : ""}`
+                          : order.access_email_status === "not_sent"
+                            ? "not sent yet"
+                            : order.access_email_status}
+                      </span>
+                      {order.access_email_error ? ` · ${order.access_email_error}` : ""}
+                    </p>
                   )}
+                  <div className="mt-2 flex flex-wrap gap-2">
+                    {order.proof_path && (
+                      <Button
+                        size="sm"
+                        variant="glass"
+                        onClick={() => proofMutation.mutate({ orderId: order.id })}
+                        disabled={proofMutation.isPending}
+                      >
+                        <ImageUp /> View payment proof
+                      </Button>
+                    )}
+                    {order.payment_status === "completed" && (
+                      <>
+                        <Button
+                          size="sm"
+                          variant="glass"
+                          onClick={() => previewMutation.mutate({ orderId: order.id })}
+                          disabled={previewMutation.isPending}
+                        >
+                          <Eye /> Preview email
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="glass"
+                          onClick={() => resendMutation.mutate({ orderId: order.id })}
+                          disabled={resendMutation.isPending}
+                        >
+                          {resendMutation.isPending ? <Loader2 className="animate-spin" /> : <Mail />} Resend email
+                        </Button>
+                      </>
+                    )}
+                  </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-xs font-bold capitalize text-muted-foreground">{order.payment_status}</span>
