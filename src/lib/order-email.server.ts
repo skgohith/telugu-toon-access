@@ -111,3 +111,40 @@ export async function sendInviteEmail(
     return { status: "failed", message };
   }
 }
+
+type AnyClient = {
+  from: (t: string) => {
+    select: (c: string) => {
+      eq: (col: string, v: unknown) => { maybeSingle: () => Promise<{ data: Json | null; error: { message: string } | null }> };
+    };
+  };
+};
+
+/** Loads the invite-email context by order id, using the caller's admin session. */
+export async function loadEmailContextById(client: AnyClient, orderId: string): Promise<Json> {
+  const { data: order, error } = await client
+    .from("orders")
+    .select(
+      "id, order_ref, customer_name, customer_email, plan_name, plan_id, final_amount, payment_status, access_email_status, access_email_attempts",
+    )
+    .eq("id", orderId)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!order) return { ok: false, message: "Order not found." };
+  if (order["payment_status"] !== "completed") return { ok: false, message: "Order is not approved yet." };
+
+  const { data: plan } = await client.from("plans").select("telegram_link").eq("id", order["plan_id"]).maybeSingle();
+
+  return {
+    ok: true,
+    order_id: order["id"],
+    order_ref: order["order_ref"],
+    customer_name: order["customer_name"],
+    customer_email: order["customer_email"],
+    plan_name: order["plan_name"],
+    final_amount: order["final_amount"],
+    telegram_link: plan?.["telegram_link"] ?? null,
+    access_email_status: order["access_email_status"],
+    access_email_attempts: order["access_email_attempts"],
+  };
+}
