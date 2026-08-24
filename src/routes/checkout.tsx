@@ -142,6 +142,9 @@ function CheckoutPage() {
           name: form.name.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
+          instagram: form.instagram.trim().replace(/^@/, "") || null,
+          telegram: form.telegram.trim().replace(/^@/, "") || null,
+
           utr: utr.trim(),
         },
       });
