@@ -324,6 +324,14 @@ function PaymentStatusPage() {
                     </a>
                   </p>
                 )}
+
+                <EmailStatus
+                  status={order.access_email_status}
+                  sentAt={order.access_email_sent_at}
+                  email={order.customer_email}
+                  pending={resendMutation.isPending}
+                  onResend={() => resendMutation.mutate()}
+                />
               </div>
             )}
 
