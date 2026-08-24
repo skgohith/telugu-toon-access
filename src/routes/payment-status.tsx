@@ -1,17 +1,19 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
-import { CheckCircle2, Clock, Loader2, RefreshCw, Search, Send, XCircle } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { CheckCircle2, Clock, Loader2, PartyPopper, RefreshCw, Search, Send, XCircle } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { dateTime, inr } from "@/lib/format";
-import { UTR_HINT, normalizeUtr, validateUtr } from "@/lib/utr";
+import { UTR_HINT, UTR_LENGTH, normalizeUtr, validateUtr } from "@/lib/utr";
 import { getTelegramAccess, submitUtr, trackOrder } from "@/lib/store.api";
+
 
 
 const searchSchema = z.object({
