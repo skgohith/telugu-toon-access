@@ -106,7 +106,7 @@ export async function sendInviteEmail(
     await recordResult(orderId, "sent");
     return { status: "sent" };
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Email delivery failed.";
+    const message = friendlyEmailError(error);
     await recordResult(orderId, "failed", message);
     return { status: "failed", message };
   }
