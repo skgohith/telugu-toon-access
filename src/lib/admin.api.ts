@@ -199,6 +199,21 @@ export async function adminPlans(): Promise<AdminPlan[]> {
   return (data ?? []) as unknown as AdminPlan[];
 }
 
+/** Price-only update for a plan — everything else about the plan stays untouched. */
+export async function adminUpdatePlanPrice(input: { data: { id: string; price: number } }) {
+  const price = Number(input.data.price);
+  if (!Number.isFinite(price) || price <= 0) throw new Error("Enter a price greater than zero.");
+  if (price > 1_000_000) throw new Error("That price looks too high.");
+
+  const { error } = await supabase
+    .from("plans")
+    .update({ price: Math.round(price * 100) / 100 })
+    .eq("id", input.data.id);
+  if (error) throw new Error(error.message);
+  return { ok: true as const };
+}
+
+
 export async function adminClearData(input: {
   data: { scope: "pending" | "completed" | "rejected" | "coupons" | "customers" | "all"; confirmText: "DELETE" };
 }) {
