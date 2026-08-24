@@ -348,7 +348,6 @@ function CheckoutPage() {
                         id="instagram"
                         value={form.instagram}
                         maxLength={40}
-                        placeholder="@telugu_toon_fan"
                         autoComplete="off"
                         onChange={(e) => setForm({ ...form, instagram: e.target.value })}
                       />
@@ -359,7 +358,6 @@ function CheckoutPage() {
                         id="telegram"
                         value={form.telegram}
                         maxLength={40}
-                        placeholder="@toonfan"
                         autoComplete="off"
                         onChange={(e) => setForm({ ...form, telegram: e.target.value })}
                       />
@@ -374,7 +372,6 @@ function CheckoutPage() {
                       id="coupon"
                       value={couponCode}
                       maxLength={40}
-                      placeholder="TOON50"
                       onChange={(e) => {
                         setCouponCode(e.target.value.toUpperCase());
                         setCoupon(null);
@@ -482,7 +479,6 @@ function CheckoutPage() {
                   value={utr}
                   inputMode="numeric"
                   maxLength={UTR_LENGTH}
-                  placeholder="402312345678"
                   autoFocus
                   aria-invalid={utr.length > 0 && !utrCheck.ok}
                   aria-describedby="utr-help"
