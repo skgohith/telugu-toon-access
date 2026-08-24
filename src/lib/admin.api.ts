@@ -15,6 +15,9 @@ export type AdminOrder = {
   customer_name: string;
   customer_email: string;
   customer_phone: string;
+  instagram_username: string;
+  telegram_username: string;
+
   original_amount: number;
   discount_amount: number;
   final_amount: number;
