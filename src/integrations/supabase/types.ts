@@ -92,6 +92,7 @@ export type Database = {
           discount_amount: number
           final_amount: number
           id: string
+          instagram_username: string
           order_ref: string
           original_amount: number
           payment_status: string
@@ -100,6 +101,7 @@ export type Database = {
           proof_path: string | null
           rejected_at: string | null
           telegram_access: boolean
+          telegram_username: string
           updated_at: string
           user_id: string | null
           utr: string | null
@@ -116,6 +118,7 @@ export type Database = {
           discount_amount?: number
           final_amount: number
           id?: string
+          instagram_username?: string
           order_ref?: string
           original_amount: number
           payment_status?: string
@@ -124,6 +127,7 @@ export type Database = {
           proof_path?: string | null
           rejected_at?: string | null
           telegram_access?: boolean
+          telegram_username?: string
           updated_at?: string
           user_id?: string | null
           utr?: string | null
@@ -140,6 +144,7 @@ export type Database = {
           discount_amount?: number
           final_amount?: number
           id?: string
+          instagram_username?: string
           order_ref?: string
           original_amount?: number
           payment_status?: string
@@ -148,6 +153,7 @@ export type Database = {
           proof_path?: string | null
           rejected_at?: string | null
           telegram_access?: boolean
+          telegram_username?: string
           updated_at?: string
           user_id?: string | null
           utr?: string | null
@@ -289,17 +295,31 @@ export type Database = {
         }
         Returns: Json
       }
-      guest_create_paid_order: {
-        Args: {
-          p_coupon_code: string
-          p_email: string
-          p_name: string
-          p_phone: string
-          p_plan_id: string
-          p_utr: string
-        }
-        Returns: Json
-      }
+      guest_create_paid_order:
+        | {
+            Args: {
+              p_coupon_code: string
+              p_email: string
+              p_name: string
+              p_phone: string
+              p_plan_id: string
+              p_utr: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              p_coupon_code: string
+              p_email: string
+              p_instagram?: string
+              p_name: string
+              p_phone: string
+              p_plan_id: string
+              p_telegram?: string
+              p_utr: string
+            }
+            Returns: Json
+          }
       guest_submit_utr: {
         Args: {
           p_email: string

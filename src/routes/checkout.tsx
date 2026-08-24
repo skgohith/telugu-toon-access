@@ -41,14 +41,28 @@ export const Route = createFileRoute("/checkout")({
   component: CheckoutPage,
 });
 
-const formSchema = z.object({
-  name: z.string().trim().min(2, "Enter your full name").max(80),
-  email: z.string().trim().email("Enter a valid email").max(160),
-  phone: z
-    .string()
-    .trim()
-    .regex(/^[0-9+\-\s]{8,15}$/, "Enter a valid mobile number"),
-});
+const handleRule = z
+  .string()
+  .trim()
+  .transform((v) => v.replace(/^@/, ""))
+  .refine((v) => v === "" || /^[A-Za-z0-9._]{2,40}$/.test(v), "Username can use letters, numbers, dot or underscore");
+
+const formSchema = z
+  .object({
+    name: z.string().trim().min(2, "Enter your full name").max(80),
+    email: z.string().trim().email("Enter a valid email").max(160),
+    phone: z
+      .string()
+      .trim()
+      .regex(/^[0-9+\-\s]{8,15}$/, "Enter a valid mobile number"),
+    instagram: handleRule,
+    telegram: handleRule,
+  })
+  .refine((v) => v.instagram !== "" || v.telegram !== "", {
+    message: "Add your Instagram or Telegram username (at least one)",
+    path: ["instagram"],
+  });
+
 
 type CouponState = {
   code: string;
@@ -65,7 +79,7 @@ function CheckoutPage() {
 
   const plan = useMemo(() => (plans ?? []).find((p) => p.id === planId) ?? null, [plans, planId]);
 
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", instagram: "", telegram: "" });
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<CouponState | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
@@ -128,6 +142,9 @@ function CheckoutPage() {
           name: form.name.trim(),
           email: form.email.trim(),
           phone: form.phone.trim(),
+          instagram: form.instagram.trim().replace(/^@/, "") || null,
+          telegram: form.telegram.trim().replace(/^@/, "") || null,
+
           utr: utr.trim(),
         },
       });
@@ -268,6 +285,39 @@ function CheckoutPage() {
                   />
                 </div>
               </div>
+
+              <div className="rounded-3xl bg-muted/40 p-4">
+                <p className="text-sm font-semibold">How can we reach you?</p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Fill at least one — either your Instagram or your Telegram username (both is even better).
+                </p>
+                <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="instagram">Instagram username</Label>
+                    <Input
+                      id="instagram"
+                      value={form.instagram}
+                      maxLength={40}
+                      placeholder="@telugu_toon_fan"
+                      autoComplete="off"
+                      onChange={(e) => setForm({ ...form, instagram: e.target.value })}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="telegram">Telegram username</Label>
+                    <Input
+                      id="telegram"
+                      value={form.telegram}
+                      maxLength={40}
+                      placeholder="@toonfan"
+                      autoComplete="off"
+                      onChange={(e) => setForm({ ...form, telegram: e.target.value })}
+                    />
+                  </div>
+                </div>
+              </div>
+
+
 
               <div className="space-y-2">
                 <Label htmlFor="coupon">Coupon code (optional)</Label>

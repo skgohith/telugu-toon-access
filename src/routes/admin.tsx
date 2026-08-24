@@ -360,6 +360,14 @@ function OrdersTab() {
                   <p className="text-xs text-muted-foreground">
                     {order.customer_name} · {order.customer_email} · {order.customer_phone}
                   </p>
+                  {(order.instagram_username || order.telegram_username) && (
+                    <p className="text-xs text-muted-foreground">
+                      {order.instagram_username ? `Instagram @${order.instagram_username}` : ""}
+                      {order.instagram_username && order.telegram_username ? " · " : ""}
+                      {order.telegram_username ? `Telegram @${order.telegram_username}` : ""}
+                    </p>
+                  )}
+
                   <p className="mt-1 text-xs text-muted-foreground">
                     {order.plan_name} · {inr(order.final_amount)}
                     {order.coupon_code ? ` · coupon ${order.coupon_code}` : ""} · {dateTime(order.created_at)}
