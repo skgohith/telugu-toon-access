@@ -15,7 +15,7 @@ export type InviteEmailData = {
   planName: string;
   orderRef: string;
   amount: string;
-  telegramLink?: string;
+  telegramLink?: string | undefined;
 };
 
 export type InviteEmailOutcome =
@@ -25,8 +25,8 @@ export type InviteEmailOutcome =
   | { status: "skipped"; message: string };
 
 function guestClient() {
-  const url = process.env["SUPABASE_URL"] ?? import.meta.env.VITE_SUPABASE_URL;
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const url = process.env["SUPABASE_URL"] ?? import.meta.env['VITE_SUPABASE_URL'];
+  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'];
   return createClient(url as string, key as string, { auth: { persistSession: false } });
 }
 
