@@ -54,6 +54,8 @@ import {
   adminUpdatePlanPrice,
 
 } from "@/lib/admin.api";
+import { sendAccessEmail } from "@/lib/order-email.functions";
+
 
 export const Route = createFileRoute("/admin")({
   head: () => ({
@@ -299,12 +301,23 @@ function OrdersTab() {
   });
 
   const statusMutation = useMutation({
-    mutationFn: (input: { orderId: string; status: "completed" | "rejected" }) => adminSetOrderStatus({ data: input }),
+    mutationFn: async (input: { orderId: string; status: "completed" | "rejected" }) => {
+      await adminSetOrderStatus({ data: input });
+      if (input.status === "completed") {
+        try {
+          await sendAccessEmail({ data: { orderId: input.orderId } });
+        } catch {
+          toast.warning("Access unlocked, but the invite email could not be sent.");
+        }
+      }
+      return { ok: true as const };
+    },
     onSuccess: (_res, input) => {
       toast.success(input.status === "completed" ? "Payment approved — access unlocked." : "Order rejected.");
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
     },
+
     onError: (error) => toast.error(error instanceof Error ? error.message : "Update failed"),
   });
 
