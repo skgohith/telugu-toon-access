@@ -129,11 +129,22 @@ function AdminPage() {
         </div>
 
         <Tabs defaultValue="overview" className="mt-8">
-          <TabsList className="flex w-full flex-wrap justify-start">
-            <TabsTrigger value="overview">Overview</TabsTrigger>
-            <TabsTrigger value="orders">Orders</TabsTrigger>
-            <TabsTrigger value="coupons">Coupons</TabsTrigger>
-            <TabsTrigger value="data">Data</TabsTrigger>
+          <TabsList className="glass flex w-full flex-wrap justify-start gap-1 rounded-full p-1">
+            <TabsTrigger value="overview" className="rounded-full px-4">
+              Overview
+            </TabsTrigger>
+            <TabsTrigger value="orders" className="rounded-full px-4">
+              Orders
+            </TabsTrigger>
+            <TabsTrigger value="prices" className="rounded-full px-4">
+              Plan prices
+            </TabsTrigger>
+            <TabsTrigger value="coupons" className="rounded-full px-4">
+              Coupons
+            </TabsTrigger>
+            <TabsTrigger value="data" className="rounded-full px-4">
+              Data
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="mt-6">
@@ -142,6 +153,9 @@ function AdminPage() {
           <TabsContent value="orders" className="mt-6">
             <OrdersTab />
           </TabsContent>
+          <TabsContent value="prices" className="mt-6">
+            <PricesTab />
+          </TabsContent>
           <TabsContent value="coupons" className="mt-6">
             <CouponsTab />
           </TabsContent>
@@ -149,6 +163,7 @@ function AdminPage() {
             <DataTab />
           </TabsContent>
         </Tabs>
+
       </section>
     </SiteLayout>
   );
