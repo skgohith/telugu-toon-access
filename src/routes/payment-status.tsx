@@ -69,9 +69,10 @@ function PaymentStatusPage() {
     previousStatus.current = order.payment_status;
 
     if (order.payment_status === "pending" && order.utr) {
-      setWaitOpen(true);
+      if (!waitDismissed.current) setWaitOpen(true);
       return;
     }
+
     setWaitOpen(false);
     if (order.payment_status === "completed" && previous !== "completed") setThanksOpen(true);
   }, [order]);
