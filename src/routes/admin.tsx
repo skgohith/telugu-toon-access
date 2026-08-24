@@ -51,6 +51,8 @@ import {
   adminProofUrl,
   adminSaveCoupon,
   adminSetOrderStatus,
+  adminUpdatePlanPrice,
+
 } from "@/lib/admin.api";
 
 export const Route = createFileRoute("/admin")({
