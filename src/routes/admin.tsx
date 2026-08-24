@@ -57,6 +57,8 @@ import {
   type AdminPlan,
   adminSetOrderStatus,
   adminUpdatePlanPrice,
+  adminPaymentSettings,
+  adminSavePaymentSettings,
 
 } from "@/lib/admin.api";
 import { previewAccessEmail, sendAccessEmail } from "@/lib/order-email.functions";
@@ -155,6 +157,9 @@ function AdminPage() {
             <TabsTrigger value="coupons" className="rounded-full px-4">
               Coupons
             </TabsTrigger>
+            <TabsTrigger value="payment" className="rounded-full px-4">
+              Payment
+            </TabsTrigger>
             <TabsTrigger value="data" className="rounded-full px-4">
               Data
             </TabsTrigger>
@@ -174,6 +179,9 @@ function AdminPage() {
           </TabsContent>
           <TabsContent value="coupons" className="mt-6">
             <CouponsTab />
+          </TabsContent>
+          <TabsContent value="payment" className="mt-6">
+            <PaymentTab />
           </TabsContent>
           <TabsContent value="data" className="mt-6">
             <DataTab />
@@ -1028,6 +1036,81 @@ function Spinner() {
   return (
     <div className="flex justify-center py-12">
       <Loader2 className="size-6 animate-spin text-highlight" />
+    </div>
+  );
+}
+
+/** Edit the UPI ID, payee name and QR image shown on the checkout page. */
+function PaymentTab() {
+  const queryClient = useQueryClient();
+  const { data, isLoading } = useQuery({ queryKey: ["admin", "payment-settings"], queryFn: adminPaymentSettings });
+  const [form, setForm] = useState({ upiId: "", payeeName: "", qrUrl: "" });
+
+  useEffect(() => {
+    if (data) setForm(data);
+  }, [data]);
+
+  const save = useMutation({
+    mutationFn: () => adminSavePaymentSettings({ data: form }),
+    onSuccess: () => {
+      toast.success("Payment details updated");
+      queryClient.invalidateQueries({ queryKey: ["admin", "payment-settings"] });
+      queryClient.invalidateQueries({ queryKey: ["payment-details"] });
+    },
+    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save"),
+  });
+
+  if (isLoading) return <Spinner />;
+
+  return (
+    <div className="glass max-w-xl rounded-4xl p-6">
+      <h2 className="font-display text-lg font-bold">Payment details</h2>
+      <p className="mt-1 text-xs text-muted-foreground">
+        These appear on the checkout page and in UPI app deep links.
+      </p>
+
+      <div className="mt-5 space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor="pay-upi">UPI ID</Label>
+          <Input
+            id="pay-upi"
+            value={form.upiId}
+            onChange={(e) => setForm((f) => ({ ...f, upiId: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="pay-name">Payee name</Label>
+          <Input
+            id="pay-name"
+            value={form.payeeName}
+            onChange={(e) => setForm((f) => ({ ...f, payeeName: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor="pay-qr">QR image link (optional)</Label>
+          <Input
+            id="pay-qr"
+            placeholder="https://..."
+            value={form.qrUrl}
+            onChange={(e) => setForm((f) => ({ ...f, qrUrl: e.target.value }))}
+          />
+          <p className="text-xs text-muted-foreground">
+            Leave empty to keep the built-in QR image. Paste a public image link to replace it.
+          </p>
+        </div>
+
+        {form.qrUrl ? (
+          <img
+            src={form.qrUrl}
+            alt="Preview of the QR code customers will scan"
+            className="w-40 rounded-3xl bg-card p-2"
+          />
+        ) : null}
+
+        <Button variant="hero" disabled={save.isPending} onClick={() => save.mutate()}>
+          {save.isPending ? <Loader2 className="animate-spin" /> : <BadgeIndianRupee />} Save payment details
+        </Button>
+      </div>
     </div>
   );
 }
