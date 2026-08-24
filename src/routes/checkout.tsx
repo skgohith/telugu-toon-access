@@ -79,7 +79,7 @@ function CheckoutPage() {
 
   const plan = useMemo(() => (plans ?? []).find((p) => p.id === planId) ?? null, [plans, planId]);
 
-  const [form, setForm] = useState({ name: "", email: "", phone: "" });
+  const [form, setForm] = useState({ name: "", email: "", phone: "", instagram: "", telegram: "" });
   const [couponCode, setCouponCode] = useState("");
   const [coupon, setCoupon] = useState<CouponState | null>(null);
   const [hasPaid, setHasPaid] = useState(false);
