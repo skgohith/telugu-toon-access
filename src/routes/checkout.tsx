@@ -1,20 +1,22 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Copy, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { inr } from "@/lib/format";
 import { createPaidOrder, getPaymentDetails, validateCoupon } from "@/lib/store.api";
 
 import { plansQueryOptions } from "@/lib/plans";
-import { UTR_HINT, normalizeUtr, validateUtr } from "@/lib/utr";
+import { UTR_HINT, UTR_LENGTH, normalizeUtr, validateUtr } from "@/lib/utr";
 import upiQr from "@/assets/upi-qr.jpg";
+
 
 
 const searchSchema = z.object({ planId: z.string().optional() });
