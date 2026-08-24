@@ -208,10 +208,13 @@ function CheckoutPage() {
   function payWithApp(scheme: string, label: string) {
     if (locked) return;
     setOpeningApp(label);
+    setAwaitingReturn(true);
     window.location.href = buildUpiLink(scheme);
     toast.success(`Opening ${label} — after paying, come back here and enter your UTR.`);
     window.setTimeout(() => setOpeningApp(null), 4000);
   }
+
+
 
 
 
