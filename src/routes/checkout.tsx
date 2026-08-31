@@ -1,7 +1,15 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useEffect, useMemo, useState } from "react";
-import { ArrowLeft, ArrowRight, Copy, Loader2, ShieldCheck, Smartphone, TicketPercent } from "lucide-react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  Copy,
+  Loader2,
+  ShieldCheck,
+  Smartphone,
+  TicketPercent,
+} from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
@@ -30,9 +38,15 @@ export const Route = createFileRoute("/checkout")({
   head: () => ({
     meta: [
       { title: "Checkout — Telugu-Toon-World" },
-      { name: "description", content: "Complete your Telugu-Toon-World premium purchase with UPI payment." },
+      {
+        name: "description",
+        content: "Complete your Telugu-Toon-World premium purchase with UPI payment.",
+      },
       { property: "og:title", content: "Checkout — Telugu-Toon-World" },
-      { property: "og:description", content: "Pay via UPI and submit your payment reference for verification." },
+      {
+        property: "og:description",
+        content: "Pay via UPI and submit your payment reference for verification.",
+      },
     ],
   }),
   component: CheckoutPage,
@@ -42,7 +56,10 @@ const handleRule = z
   .string()
   .trim()
   .transform((v) => v.replace(/^@/, ""))
-  .refine((v) => v === "" || /^[A-Za-z0-9._]{2,40}$/.test(v), "Username can use letters, numbers, dot or underscore");
+  .refine(
+    (v) => v === "" || /^[A-Za-z0-9._]{2,40}$/.test(v),
+    "Username can use letters, numbers, dot or underscore",
+  );
 
 const formSchema = z
   .object({
@@ -73,7 +90,10 @@ function CheckoutPage() {
   const navigate = useNavigate();
 
   const { data: plans } = useQuery(plansQueryOptions);
-  const { data: payment } = useQuery({ queryKey: ["payment-details"], queryFn: () => getPaymentDetails() });
+  const { data: payment } = useQuery({
+    queryKey: ["payment-details"],
+    queryFn: () => getPaymentDetails(),
+  });
 
   const plan = useMemo(() => (plans ?? []).find((p) => p.id === planId) ?? null, [plans, planId]);
 
@@ -117,7 +137,11 @@ function CheckoutPage() {
         toast.error(result.message);
         return;
       }
-      setCoupon({ code: result.code, discountAmount: result.discountAmount, finalAmount: result.finalAmount });
+      setCoupon({
+        code: result.code,
+        discountAmount: result.discountAmount,
+        finalAmount: result.finalAmount,
+      });
       toast.success(result.message);
     },
     onError: (error) => toast.error(error instanceof Error ? error.message : "Coupon check failed"),
@@ -148,7 +172,10 @@ function CheckoutPage() {
       setSubmitted(true);
       setStage(null);
       toast.success("Payment details submitted — the admin will verify shortly.");
-      navigate({ to: "/payment-status", search: { ref: order.order_ref, email: order.customer_email } });
+      navigate({
+        to: "/payment-status",
+        search: { ref: order.order_ref, email: order.customer_email },
+      });
     },
     onError: (error) => {
       setStage(null);
@@ -173,7 +200,9 @@ function CheckoutPage() {
       <SiteLayout>
         <div className="mx-auto max-w-md px-4 py-24 text-center">
           <h1 className="text-2xl font-extrabold">Select a plan first</h1>
-          <p className="mt-2 text-sm text-muted-foreground">Pick Lite Premium or Max Premium to continue.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Pick Lite Premium or Max Premium to continue.
+          </p>
           <Button asChild variant="hero" className="mt-6">
             <Link to="/plans">View plans</Link>
           </Button>
@@ -301,7 +330,9 @@ function CheckoutPage() {
               }}
             >
               <h2 className="font-display text-xl font-bold">Your details</h2>
-              <p className="mt-1 text-xs text-muted-foreground">Step 1 of 3 — we use these to send your access.</p>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Step 1 of 3 — we use these to send your access.
+              </p>
               <div className="mt-5 space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="name">Full name</Label>
@@ -341,7 +372,8 @@ function CheckoutPage() {
                 <div className="rounded-3xl bg-muted/40 p-4">
                   <p className="text-sm font-semibold">How can we reach you?</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Fill at least one — either your Instagram or your Telegram username (both is even better).
+                    Fill at least one — either your Instagram or your Telegram username (both is
+                    even better).
                   </p>
                   <div className="mt-3 grid gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
@@ -385,7 +417,12 @@ function CheckoutPage() {
                       onClick={() => couponCode.trim().length >= 2 && couponMutation.mutate()}
                       disabled={couponMutation.isPending || locked}
                     >
-                      {couponMutation.isPending ? <Loader2 className="animate-spin" /> : <TicketPercent />} Apply
+                      {couponMutation.isPending ? (
+                        <Loader2 className="animate-spin" />
+                      ) : (
+                        <TicketPercent />
+                      )}{" "}
+                      Apply
                     </Button>
                   </div>
                   {coupon && (
@@ -417,7 +454,9 @@ function CheckoutPage() {
               <p className="mt-2 text-xs font-semibold">{payeeName}</p>
 
               <div className="mt-5 flex items-center justify-center gap-2">
-                <code className="rounded-full bg-muted px-4 py-2 text-sm font-semibold">{upiId}</code>
+                <code className="rounded-full bg-muted px-4 py-2 text-sm font-semibold">
+                  {upiId}
+                </code>
                 <Button
                   type="button"
                   variant="glass"
@@ -435,8 +474,8 @@ function CheckoutPage() {
               <div className="mt-6 border-t border-border/60 pt-5 text-left">
                 <p className="text-sm font-bold">Pay with a UPI app</p>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  On mobile, tap an app to open it with the amount pre-filled. When you come back, you land on the UTR
-                  step.
+                  On mobile, tap an app to open it with the amount pre-filled. When you come back,
+                  you land on the UTR step.
                 </p>
                 <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
                   {UPI_APPS.map((app) => {
@@ -450,7 +489,8 @@ function CheckoutPage() {
                         disabled={locked}
                         onClick={() => payWithApp(app.scheme, app.label)}
                       >
-                        {isOpening ? <Loader2 className="animate-spin" /> : <Smartphone />} {app.label}
+                        {isOpening ? <Loader2 className="animate-spin" /> : <Smartphone />}{" "}
+                        {app.label}
                       </Button>
                     );
                   })}
@@ -458,10 +498,21 @@ function CheckoutPage() {
               </div>
 
               <div className="mt-6 flex flex-col gap-2 sm:flex-row">
-                <Button type="button" variant="glass" className="sm:w-auto" onClick={() => setStep(1)}>
+                <Button
+                  type="button"
+                  variant="glass"
+                  className="sm:w-auto"
+                  onClick={() => setStep(1)}
+                >
                   <ArrowLeft /> Back
                 </Button>
-                <Button type="button" variant="hero" size="lg" className="flex-1" onClick={() => setStep(3)}>
+                <Button
+                  type="button"
+                  variant="hero"
+                  size="lg"
+                  className="flex-1"
+                  onClick={() => setStep(3)}
+                >
                   I have completed the payment <ArrowRight />
                 </Button>
               </div>
@@ -491,7 +542,9 @@ function CheckoutPage() {
                   id="utr-help"
                   className={`text-xs ${utr.length > 0 && !utrCheck.ok ? "text-destructive" : "text-muted-foreground"}`}
                 >
-                  {utr.length > 0 && !utrCheck.ok ? utrCheck.message : `${UTR_HINT}. Each UTR can be used only once.`}
+                  {utr.length > 0 && !utrCheck.ok
+                    ? utrCheck.message
+                    : `${UTR_HINT}. Each UTR can be used only once.`}
                 </p>
               </div>
 
@@ -505,7 +558,13 @@ function CheckoutPage() {
                 >
                   <ArrowLeft /> Back
                 </Button>
-                <Button type="submit" variant="hero" size="lg" className="flex-1" disabled={locked || !utrCheck.ok}>
+                <Button
+                  type="submit"
+                  variant="hero"
+                  size="lg"
+                  className="flex-1"
+                  disabled={locked || !utrCheck.ok}
+                >
                   {orderMutation.isPending ? <Loader2 className="animate-spin" /> : <ShieldCheck />}{" "}
                   {stage ?? (submitted ? "Submitted — redirecting…" : "Submit payment details")}
                 </Button>

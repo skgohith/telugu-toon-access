@@ -85,7 +85,6 @@ import { cn } from "@/lib/utils";
 import { previewAccessEmail, sendAccessEmail } from "@/lib/order-email.functions";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
-
 export const Route = createFileRoute("/admin")({
   head: () => ({
     meta: [
@@ -119,7 +118,8 @@ function AdminPage() {
     if (!loading && !user) navigate({ to: "/auth", search: { redirect: "/admin" } });
   }, [loading, user, navigate]);
 
-  const [activeSection, setActiveSection] = useState<(typeof ADMIN_SECTIONS)[number]["value"]>("overview");
+  const [activeSection, setActiveSection] =
+    useState<(typeof ADMIN_SECTIONS)[number]["value"]>("overview");
 
   const { data: me, isLoading } = useQuery({
     queryKey: ["me", user?.id],
@@ -143,7 +143,9 @@ function AdminPage() {
         <div className="mx-auto max-w-md px-4 py-24 text-center">
           <ShieldCheck className="mx-auto size-10 text-muted-foreground" />
           <h1 className="mt-4 text-2xl font-extrabold">Admins only</h1>
-          <p className="mt-2 text-sm text-muted-foreground">This area is restricted to the store administrator.</p>
+          <p className="mt-2 text-sm text-muted-foreground">
+            This area is restricted to the store administrator.
+          </p>
           <Button asChild variant="hero" className="mt-6">
             <Link to="/">Back to home</Link>
           </Button>
@@ -164,7 +166,9 @@ function AdminPage() {
                 <div className="flex items-center gap-3">
                   <SidebarTrigger className="shrink-0" />
                   <div>
-                    <p className="text-xs uppercase tracking-widest text-muted-foreground">Admin panel</p>
+                    <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                      Admin panel
+                    </p>
                     <h1 className="text-2xl font-extrabold sm:text-3xl">
                       Manage <span className="text-gradient">Telugu-Toon-World</span>
                     </h1>
@@ -219,7 +223,9 @@ function AdminSidebar({
           {!collapsed && (
             <div className="min-w-0">
               <p className="truncate font-display font-bold leading-tight">Telugu-Toon</p>
-              <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">Admin</p>
+              <p className="text-[10px] uppercase tracking-wider text-sidebar-foreground/60">
+                Admin
+              </p>
             </div>
           )}
         </div>
@@ -265,7 +271,10 @@ function AdminSidebar({
 }
 
 function OverviewTab() {
-  const { data, isLoading } = useQuery({ queryKey: ["admin-overview"], queryFn: () => adminOverview() });
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin-overview"],
+    queryFn: () => adminOverview(),
+  });
 
   if (isLoading || !data) return <Spinner />;
 
@@ -284,7 +293,9 @@ function OverviewTab() {
         {cards.map((card) => (
           <div key={card.label} className="glass rounded-3xl p-5">
             <card.icon className="size-5 text-highlight" />
-            <p className="mt-3 text-xs uppercase tracking-widest text-muted-foreground">{card.label}</p>
+            <p className="mt-3 text-xs uppercase tracking-widest text-muted-foreground">
+              {card.label}
+            </p>
             <p className="mt-1 text-2xl font-extrabold">{card.value}</p>
           </div>
         ))}
@@ -306,7 +317,13 @@ function OverviewTab() {
                     borderRadius: 16,
                   }}
                 />
-                <Line type="monotone" dataKey="revenue" stroke="var(--color-chart-1)" strokeWidth={3} dot={false} />
+                <Line
+                  type="monotone"
+                  dataKey="revenue"
+                  stroke="var(--color-chart-1)"
+                  strokeWidth={3}
+                  dot={false}
+                />
               </LineChart>
             </ResponsiveContainer>
           </div>
@@ -317,7 +334,13 @@ function OverviewTab() {
           <div className="mt-4 h-64">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>
-                <Pie data={data.statusBreakdown} dataKey="value" nameKey="name" innerRadius={50} outerRadius={90}>
+                <Pie
+                  data={data.statusBreakdown}
+                  dataKey="value"
+                  nameKey="name"
+                  innerRadius={50}
+                  outerRadius={90}
+                >
                   {data.statusBreakdown.map((entry, index) => (
                     <Cell key={entry.name} fill={CHART_COLORS[index % CHART_COLORS.length]} />
                   ))}
@@ -398,7 +421,9 @@ function OrdersTab() {
         try {
           const email = await sendAccessEmail({ data: { orderId: input.orderId } });
           if (email.status !== "sent") {
-            toast.warning("Access unlocked, but the invite email was not delivered — try Resend email.");
+            toast.warning(
+              "Access unlocked, but the invite email was not delivered — try Resend email.",
+            );
           }
         } catch {
           toast.warning("Access unlocked, but the invite email could not be sent.");
@@ -407,7 +432,9 @@ function OrdersTab() {
       return { ok: true as const };
     },
     onSuccess: (_res, input) => {
-      toast.success(input.status === "completed" ? "Payment approved — access unlocked." : "Order rejected.");
+      toast.success(
+        input.status === "completed" ? "Payment approved — access unlocked." : "Order rejected.",
+      );
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
       queryClient.invalidateQueries({ queryKey: ["admin-overview"] });
     },
@@ -424,10 +451,13 @@ function OrdersTab() {
       }
       window.open(result.url, "_blank", "noopener,noreferrer");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not open the proof"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not open the proof"),
   });
 
-  const [preview, setPreview] = useState<{ to: string; subject: string; html: string } | null>(null);
+  const [preview, setPreview] = useState<{ to: string; subject: string; html: string } | null>(
+    null,
+  );
 
   const previewMutation = useMutation({
     mutationFn: (input: { orderId: string }) => previewAccessEmail({ data: input }),
@@ -438,18 +468,22 @@ function OrdersTab() {
       }
       setPreview({ to: result.to, subject: result.subject, html: result.html });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not render the email"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not render the email"),
   });
 
   const resendMutation = useMutation({
-    mutationFn: (input: { orderId: string }) => sendAccessEmail({ data: { orderId: input.orderId, force: true } }),
+    mutationFn: (input: { orderId: string }) =>
+      sendAccessEmail({ data: { orderId: input.orderId, force: true } }),
     onSuccess: (result) => {
       if (result.status === "sent") toast.success("Invite email sent to the customer.");
-      else if (result.status === "suppressed") toast.error("The customer's address is blocked by the mail provider.");
+      else if (result.status === "suppressed")
+        toast.error("The customer's address is blocked by the mail provider.");
       else toast.error(result.message ?? "Could not send the email.");
       queryClient.invalidateQueries({ queryKey: ["admin-orders"] });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not send the email"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not send the email"),
   });
 
   return (
@@ -502,9 +536,12 @@ function OrdersTab() {
 
                   <p className="mt-1 text-xs text-muted-foreground">
                     {order.plan_name} · {inr(order.final_amount)}
-                    {order.coupon_code ? ` · coupon ${order.coupon_code}` : ""} · {dateTime(order.created_at)}
+                    {order.coupon_code ? ` · coupon ${order.coupon_code}` : ""} ·{" "}
+                    {dateTime(order.created_at)}
                   </p>
-                  <p className="mt-1 text-xs font-semibold text-highlight">UTR: {order.utr ?? "not submitted"}</p>
+                  <p className="mt-1 text-xs font-semibold text-highlight">
+                    UTR: {order.utr ?? "not submitted"}
+                  </p>
                   {order.payment_status === "completed" && (
                     <p className="mt-1 text-xs text-muted-foreground">
                       Invite email:{" "}
@@ -512,7 +549,8 @@ function OrdersTab() {
                         className={
                           order.access_email_status === "sent"
                             ? "font-semibold text-success"
-                            : order.access_email_status === "failed" || order.access_email_status === "suppressed"
+                            : order.access_email_status === "failed" ||
+                                order.access_email_status === "suppressed"
                               ? "font-semibold text-destructive"
                               : "font-semibold text-highlight"
                         }
@@ -552,20 +590,29 @@ function OrdersTab() {
                           onClick={() => resendMutation.mutate({ orderId: order.id })}
                           disabled={resendMutation.isPending}
                         >
-                          {resendMutation.isPending ? <Loader2 className="animate-spin" /> : <Mail />} Resend email
+                          {resendMutation.isPending ? (
+                            <Loader2 className="animate-spin" />
+                          ) : (
+                            <Mail />
+                          )}{" "}
+                          Resend email
                         </Button>
                       </>
                     )}
                   </div>
                 </div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-xs font-bold capitalize text-muted-foreground">{order.payment_status}</span>
+                  <span className="text-xs font-bold capitalize text-muted-foreground">
+                    {order.payment_status}
+                  </span>
                   {order.payment_status !== "completed" && (
                     <Button
                       size="sm"
                       variant="success"
                       disabled={statusMutation.isPending}
-                      onClick={() => statusMutation.mutate({ orderId: order.id, status: "completed" })}
+                      onClick={() =>
+                        statusMutation.mutate({ orderId: order.id, status: "completed" })
+                      }
                     >
                       <CheckCircle2 /> Approve
                     </Button>
@@ -575,7 +622,9 @@ function OrdersTab() {
                       size="sm"
                       variant="destructive"
                       disabled={statusMutation.isPending}
-                      onClick={() => statusMutation.mutate({ orderId: order.id, status: "rejected" })}
+                      onClick={() =>
+                        statusMutation.mutate({ orderId: order.id, status: "rejected" })
+                      }
                     >
                       <XCircle /> Reject
                     </Button>
@@ -625,7 +674,10 @@ function CouponsTab() {
   const queryClient = useQueryClient();
   const [form, setForm] = useState(emptyCoupon);
 
-  const { data: coupons, isLoading } = useQuery({ queryKey: ["admin-coupons"], queryFn: () => adminCoupons() });
+  const { data: coupons, isLoading } = useQuery({
+    queryKey: ["admin-coupons"],
+    queryFn: () => adminCoupons(),
+  });
   const { data: plans } = useQuery({ queryKey: ["admin-plans"], queryFn: () => adminPlans() });
 
   const saveMutation = useMutation({
@@ -647,7 +699,8 @@ function CouponsTab() {
       setForm(emptyCoupon);
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save coupon"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not save coupon"),
   });
 
   const deleteMutation = useMutation({
@@ -656,7 +709,8 @@ function CouponsTab() {
       toast.success("Coupon deleted");
       queryClient.invalidateQueries({ queryKey: ["admin-coupons"] });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not delete coupon"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not delete coupon"),
   });
 
   function edit(coupon: AdminCoupon) {
@@ -685,7 +739,9 @@ function CouponsTab() {
           saveMutation.mutate();
         }}
       >
-        <h2 className="font-display text-lg font-bold">{form.id ? "Edit coupon" : "Create coupon"}</h2>
+        <h2 className="font-display text-lg font-bold">
+          {form.id ? "Edit coupon" : "Create coupon"}
+        </h2>
         <div className="mt-5 space-y-4">
           <div className="space-y-2">
             <Label htmlFor="code">Code</Label>
@@ -720,7 +776,9 @@ function CouponsTab() {
               <select
                 id="type"
                 value={form.discountType}
-                onChange={(e) => setForm({ ...form, discountType: e.target.value as "percent" | "fixed" })}
+                onChange={(e) =>
+                  setForm({ ...form, discountType: e.target.value as "percent" | "fixed" })
+                }
                 className="h-10 w-full rounded-full border border-input bg-card px-4 text-sm text-foreground"
               >
                 <option value="percent">Percent (%)</option>
@@ -762,7 +820,11 @@ function CouponsTab() {
           </div>
           <div className="flex items-center justify-between rounded-2xl bg-muted/40 px-4 py-3">
             <Label htmlFor="active">Active</Label>
-            <Switch id="active" checked={form.active} onCheckedChange={(v) => setForm({ ...form, active: v })} />
+            <Switch
+              id="active"
+              checked={form.active}
+              onCheckedChange={(v) => setForm({ ...form, active: v })}
+            />
           </div>
         </div>
         <div className="mt-6 flex gap-3">
@@ -792,11 +854,14 @@ function CouponsTab() {
                     <p className="font-display font-bold">
                       {coupon.code}{" "}
                       <span className="text-xs font-semibold text-highlight">
-                        {coupon.discount_type === "percent" ? `${coupon.discount_value}% off` : `${inr(coupon.discount_value)} off`}
+                        {coupon.discount_type === "percent"
+                          ? `${coupon.discount_value}% off`
+                          : `${inr(coupon.discount_value)} off`}
                       </span>
                     </p>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {(plans ?? []).find((p) => p.id === coupon.plan_id)?.name ?? "Plan"} · used {coupon.used_count}
+                      {(plans ?? []).find((p) => p.id === coupon.plan_id)?.name ?? "Plan"} · used{" "}
+                      {coupon.used_count}
                       {coupon.max_uses ? `/${coupon.max_uses}` : ""} ·{" "}
                       {coupon.expires_at ? `expires ${dateOnly(coupon.expires_at)}` : "no expiry"} ·{" "}
                       {coupon.active ? "active" : "inactive"}
@@ -828,7 +893,10 @@ function CouponsTab() {
 /** Full plan editor — every customer-visible detail of a plan. */
 function PlansTab() {
   const queryClient = useQueryClient();
-  const { data: plans, isLoading } = useQuery({ queryKey: ["admin-plans"], queryFn: () => adminPlans() });
+  const { data: plans, isLoading } = useQuery({
+    queryKey: ["admin-plans"],
+    queryFn: () => adminPlans(),
+  });
 
   if (isLoading) return <Spinner />;
 
@@ -837,15 +905,19 @@ function PlansTab() {
       <div className="glass rounded-3xl p-6">
         <h2 className="font-display text-lg font-bold">Plans</h2>
         <p className="mt-1 text-sm text-muted-foreground">
-          Edit everything customers see: name, price, duration, description, features, the Telegram invite link and
-          whether the plan is shown on the storefront.
+          Edit everything customers see: name, price, duration, description, features, the Telegram
+          invite link and whether the plan is shown on the storefront.
         </p>
       </div>
       {(plans ?? []).map((plan) => (
-        <PlanEditor key={plan.id} plan={plan} onSaved={() => {
-          queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
-          queryClient.invalidateQueries({ queryKey: ["plans"] });
-        }} />
+        <PlanEditor
+          key={plan.id}
+          plan={plan}
+          onSaved={() => {
+            queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
+            queryClient.invalidateQueries({ queryKey: ["plans"] });
+          }}
+        />
       ))}
     </div>
   );
@@ -886,7 +958,8 @@ function PlanEditor({ plan, onSaved }: { plan: AdminPlan; onSaved: () => void })
       toast.success(`${form.name || "Plan"} updated — the storefront now shows the new details.`);
       onSaved();
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not save this plan"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not save this plan"),
   });
 
   const set = (key: keyof typeof form) => (value: string | boolean) =>
@@ -908,36 +981,82 @@ function PlanEditor({ plan, onSaved }: { plan: AdminPlan; onSaved: () => void })
       <div className="mt-5 grid gap-4 md:grid-cols-2">
         <div className="space-y-2">
           <Label htmlFor={`name-${plan.id}`}>Plan name</Label>
-          <Input id={`name-${plan.id}`} value={form.name} onChange={(e) => set("name")(e.target.value)} />
+          <Input
+            id={`name-${plan.id}`}
+            value={form.name}
+            onChange={(e) => set("name")(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`p-${plan.id}`}>Price (₹)</Label>
-          <Input id={`p-${plan.id}`} type="number" min={1} step="1" value={form.price} onChange={(e) => set("price")(e.target.value)} />
+          <Input
+            id={`p-${plan.id}`}
+            type="number"
+            min={1}
+            step="1"
+            value={form.price}
+            onChange={(e) => set("price")(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`dl-${plan.id}`}>Duration label</Label>
-          <Input id={`dl-${plan.id}`} value={form.durationLabel} placeholder="1 Month / Lifetime" onChange={(e) => set("durationLabel")(e.target.value)} />
+          <Input
+            id={`dl-${plan.id}`}
+            value={form.durationLabel}
+            placeholder="1 Month / Lifetime"
+            onChange={(e) => set("durationLabel")(e.target.value)}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor={`dd-${plan.id}`}>Duration in days</Label>
-          <Input id={`dd-${plan.id}`} type="number" min={1} step="1" value={form.durationDays} onChange={(e) => set("durationDays")(e.target.value)} />
+          <Input
+            id={`dd-${plan.id}`}
+            type="number"
+            min={1}
+            step="1"
+            value={form.durationDays}
+            onChange={(e) => set("durationDays")(e.target.value)}
+          />
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor={`desc-${plan.id}`}>Short description</Label>
-          <Textarea id={`desc-${plan.id}`} rows={2} value={form.description} onChange={(e) => set("description")(e.target.value)} />
+          <Textarea
+            id={`desc-${plan.id}`}
+            rows={2}
+            value={form.description}
+            onChange={(e) => set("description")(e.target.value)}
+          />
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor={`f-${plan.id}`}>Features (one per line)</Label>
-          <Textarea id={`f-${plan.id}`} rows={5} value={form.features} onChange={(e) => set("features")(e.target.value)} />
+          <Textarea
+            id={`f-${plan.id}`}
+            rows={5}
+            value={form.features}
+            onChange={(e) => set("features")(e.target.value)}
+          />
         </div>
         <div className="space-y-2 md:col-span-2">
           <Label htmlFor={`tl-${plan.id}`}>Telegram invite link</Label>
-          <Input id={`tl-${plan.id}`} value={form.telegramLink} placeholder="https://t.me/+..." onChange={(e) => set("telegramLink")(e.target.value)} />
-          <p className="text-xs text-muted-foreground">Sent to customers automatically once you approve their payment.</p>
+          <Input
+            id={`tl-${plan.id}`}
+            value={form.telegramLink}
+            placeholder="https://t.me/+..."
+            onChange={(e) => set("telegramLink")(e.target.value)}
+          />
+          <p className="text-xs text-muted-foreground">
+            Sent to customers automatically once you approve their payment.
+          </p>
         </div>
         <div className="space-y-2">
           <Label htmlFor={`so-${plan.id}`}>Display order</Label>
-          <Input id={`so-${plan.id}`} type="number" step="1" value={form.sortOrder} onChange={(e) => set("sortOrder")(e.target.value)} />
+          <Input
+            id={`so-${plan.id}`}
+            type="number"
+            step="1"
+            value={form.sortOrder}
+            onChange={(e) => set("sortOrder")(e.target.value)}
+          />
         </div>
         <div className="flex items-end gap-6">
           <label className="flex items-center gap-2 text-sm">
@@ -963,7 +1082,10 @@ function PlanEditor({ plan, onSaved }: { plan: AdminPlan; onSaved: () => void })
 /** Price-only editor — nothing else about a plan can be changed here. */
 function PricesTab() {
   const queryClient = useQueryClient();
-  const { data: plans, isLoading } = useQuery({ queryKey: ["admin-plans"], queryFn: () => adminPlans() });
+  const { data: plans, isLoading } = useQuery({
+    queryKey: ["admin-plans"],
+    queryFn: () => adminPlans(),
+  });
   const [drafts, setDrafts] = useState<Record<string, string>>({});
 
   const mutation = useMutation({
@@ -978,7 +1100,8 @@ function PricesTab() {
       queryClient.invalidateQueries({ queryKey: ["admin-plans"] });
       queryClient.invalidateQueries({ queryKey: ["plans"] });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not update the price"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not update the price"),
   });
 
   if (isLoading) return <Spinner />;
@@ -990,7 +1113,8 @@ function PricesTab() {
         <div>
           <h2 className="font-display text-lg font-bold">Plan prices</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Change only the price customers pay. Plan names, durations and features stay as they are.
+            Change only the price customers pay. Plan names, durations and features stay as they
+            are.
           </p>
         </div>
       </div>
@@ -1007,7 +1131,8 @@ function PricesTab() {
               <div>
                 <p className="font-display font-bold">{plan.name}</p>
                 <p className="text-xs text-muted-foreground">
-                  {plan.duration_label} · current price {inr(plan.price)} · {plan.active ? "active" : "inactive"}
+                  {plan.duration_label} · current price {inr(plan.price)} ·{" "}
+                  {plan.active ? "active" : "inactive"}
                 </p>
               </div>
               <div className="flex items-end gap-3">
@@ -1039,7 +1164,6 @@ function PricesTab() {
   );
 }
 
-
 const SCOPES = [
   { value: "pending", label: "Clear pending orders" },
   { value: "completed", label: "Clear completed orders" },
@@ -1061,7 +1185,8 @@ function DataTab() {
       setConfirmText("");
       queryClient.invalidateQueries();
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not clear data"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not clear data"),
   });
 
   return (
@@ -1088,7 +1213,11 @@ function DataTab() {
         </div>
         <div className="space-y-2">
           <Label htmlFor="confirm">Type DELETE</Label>
-          <Input id="confirm" value={confirmText} onChange={(e) => setConfirmText(e.target.value.toUpperCase())} />
+          <Input
+            id="confirm"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value.toUpperCase())}
+          />
         </div>
         <Button
           variant="destructive"
@@ -1114,7 +1243,10 @@ function Spinner() {
 /** Edit the UPI ID, payee name and QR image shown on the checkout page. */
 function PaymentTab() {
   const queryClient = useQueryClient();
-  const { data, isLoading } = useQuery({ queryKey: ["admin", "payment-settings"], queryFn: adminPaymentSettings });
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "payment-settings"],
+    queryFn: adminPaymentSettings,
+  });
   const [form, setForm] = useState({ upiId: "", payeeName: "", qrUrl: "" });
 
   useEffect(() => {
@@ -1190,8 +1322,8 @@ function PaymentTab() {
             }}
           />
           <p className="text-xs text-muted-foreground">
-            Upload your UPI QR screenshot (under 400 KB), or paste an image link below. Leave both empty to keep the
-            built-in QR.
+            Upload your UPI QR screenshot (under 400 KB), or paste an image link below. Leave both
+            empty to keep the built-in QR.
           </p>
           <Input
             id="pay-qr"
@@ -1215,7 +1347,8 @@ function PaymentTab() {
         ) : null}
 
         <Button variant="hero" disabled={save.isPending} onClick={() => save.mutate()}>
-          {save.isPending ? <Loader2 className="animate-spin" /> : <BadgeIndianRupee />} Save payment details
+          {save.isPending ? <Loader2 className="animate-spin" /> : <BadgeIndianRupee />} Save
+          payment details
         </Button>
       </div>
     </div>

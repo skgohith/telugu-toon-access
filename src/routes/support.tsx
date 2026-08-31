@@ -3,7 +3,12 @@ import { Mail, MessageCircleQuestion, Wallet } from "lucide-react";
 import { z } from "zod";
 
 import { SectionHeading, SiteLayout } from "@/components/site/SiteLayout";
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 
 const searchSchema = z.object({
@@ -17,10 +22,14 @@ export const Route = createFileRoute("/support")({
       { title: "Support & FAQ — Telugu-Toon-World" },
       {
         name: "description",
-        content: "Get help with UPI payments, order verification and Telegram access for Telugu-Toon-World.",
+        content:
+          "Get help with UPI payments, order verification and Telegram access for Telugu-Toon-World.",
       },
       { property: "og:title", content: "Support & FAQ — Telugu-Toon-World" },
-      { property: "og:description", content: "Answers about payments, verification time and channel access." },
+      {
+        property: "og:description",
+        content: "Answers about payments, verification time and channel access.",
+      },
       { property: "og:url", content: "https://telugu-toon-access.lovable.app/support" },
     ],
     links: [{ rel: "canonical", href: "https://telugu-toon-access.lovable.app/support" }],
@@ -86,7 +95,9 @@ function SupportPage() {
           <div className="glass rounded-3xl p-6">
             <Wallet className="size-5 text-highlight" />
             <h3 className="mt-3 font-display font-bold">Payment help</h3>
-            <p className="mt-1 text-sm text-muted-foreground">Share your order reference and UTR for a quick check.</p>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Share your order reference and UTR for a quick check.
+            </p>
           </div>
           <div className="glass rounded-3xl p-6">
             <MessageCircleQuestion className="size-5 text-highlight" />
@@ -107,8 +118,12 @@ function SupportPage() {
           >
             {FAQS.map((faq, index) => (
               <AccordionItem key={faq.q} value={`item-${index}`}>
-                <AccordionTrigger className="text-left text-sm font-semibold">{faq.q}</AccordionTrigger>
-                <AccordionContent className="text-sm text-muted-foreground">{faq.a}</AccordionContent>
+                <AccordionTrigger className="text-left text-sm font-semibold">
+                  {faq.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-sm text-muted-foreground">
+                  {faq.a}
+                </AccordionContent>
               </AccordionItem>
             ))}
           </Accordion>

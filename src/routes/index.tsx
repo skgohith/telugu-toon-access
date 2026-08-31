@@ -22,7 +22,8 @@ export const Route = createFileRoute("/")({
       { property: "og:title", content: "Telugu-Toon-World — Your World of Telugu Cartoons" },
       {
         property: "og:description",
-        content: "Get premium access to our private Telegram channel and enjoy our exclusive cartoon collection.",
+        content:
+          "Get premium access to our private Telegram channel and enjoy our exclusive cartoon collection.",
       },
     ],
   }),
@@ -35,9 +36,21 @@ const FEATURES = [
     title: "Premium Cartoon Collection",
     body: "Access our curated cartoon collection through the private Telegram channel.",
   },
-  { icon: Smartphone, title: "Mobile Friendly", body: "Enjoy access from your phone, tablet, or desktop." },
-  { icon: Zap, title: "Simple Access", body: "Purchase your plan and receive Telegram access after payment verification." },
-  { icon: Lock, title: "Private Community", body: "Access is provided only to approved customers." },
+  {
+    icon: Smartphone,
+    title: "Mobile Friendly",
+    body: "Enjoy access from your phone, tablet, or desktop.",
+  },
+  {
+    icon: Zap,
+    title: "Simple Access",
+    body: "Purchase your plan and receive Telegram access after payment verification.",
+  },
+  {
+    icon: Lock,
+    title: "Private Community",
+    body: "Access is provided only to approved customers.",
+  },
 ];
 
 function Home() {
@@ -46,7 +59,11 @@ function Home() {
   return (
     <SiteLayout>
       <section className="relative mx-auto grid w-full max-w-7xl items-center gap-12 px-4 pb-16 pt-14 sm:px-6 lg:grid-cols-2 lg:pt-20">
-        <motion.div initial={{ opacity: 0, y: 24 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+        >
           <span className="inline-flex items-center gap-2 rounded-full border border-primary/40 bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-[0.2em] text-highlight">
             <Sparkles className="size-3.5" /> Private Telegram Membership
           </span>
@@ -54,8 +71,8 @@ function Home() {
             Welcome to <span className="text-gradient">Telugu-Toon-World</span>
           </h1>
           <p className="mt-5 max-w-xl text-lg text-muted-foreground">
-            Unlock premium access to our private Telegram cartoon world. Get premium access to our private Telegram
-            channel and enjoy our exclusive cartoon collection.
+            Unlock premium access to our private Telegram cartoon world. Get premium access to our
+            private Telegram channel and enjoy our exclusive cartoon collection.
           </p>
 
           <div className="mt-8 flex flex-wrap gap-3">
@@ -72,7 +89,9 @@ function Home() {
           <div className="mt-10 flex flex-wrap gap-6 text-sm text-muted-foreground">
             {(plans ?? []).map((plan) => (
               <div key={plan.id} className="glass rounded-2xl px-5 py-3">
-                <p className="font-display text-xs uppercase tracking-widest text-highlight">{plan.name}</p>
+                <p className="font-display text-xs uppercase tracking-widest text-highlight">
+                  {plan.name}
+                </p>
                 <p className="mt-1 text-xl font-extrabold text-foreground">{inr(plan.price)}</p>
                 <p className="text-xs">{plan.duration_label}</p>
               </div>
@@ -119,9 +138,13 @@ function Home() {
               transition={{ duration: 0.35, delay: (index % 5) * 0.05 }}
               className={`group glass relative overflow-hidden rounded-3xl bg-gradient-to-br ${category.tint} to-transparent p-5 transition-transform duration-300 hover:-translate-y-1.5`}
             >
-              <span className="text-2xl transition-transform duration-300 group-hover:scale-125">{category.icon}</span>
+              <span className="text-2xl transition-transform duration-300 group-hover:scale-125">
+                {category.icon}
+              </span>
               <h3 className="mt-3 font-display text-base font-bold">{category.name}</h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{category.description}</p>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {category.description}
+              </p>
               <span className="pointer-events-none absolute -right-8 -top-8 size-20 rounded-full bg-highlight/10 blur-2xl transition-opacity duration-300 group-hover:opacity-100" />
             </motion.article>
           ))}
@@ -136,7 +159,10 @@ function Home() {
         <SectionHeading eyebrow="Why us" title="Why Telugu-Toon-World" />
         <div className="mt-12 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
           {FEATURES.map((feature) => (
-            <div key={feature.title} className="glass rounded-3xl p-6 transition-transform duration-300 hover:-translate-y-1">
+            <div
+              key={feature.title}
+              className="glass rounded-3xl p-6 transition-transform duration-300 hover:-translate-y-1"
+            >
               <span className="inline-flex size-11 items-center justify-center rounded-2xl bg-brand-gradient text-primary-foreground">
                 <feature.icon className="size-5" />
               </span>
@@ -150,10 +176,12 @@ function Home() {
       <section className="mx-auto w-full max-w-5xl px-4 pb-8 sm:px-6">
         <div className="glass relative overflow-hidden rounded-4xl p-10 text-center">
           <div className="pointer-events-none absolute inset-0 bg-brand-gradient opacity-15" />
-          <h2 className="relative text-3xl font-extrabold sm:text-4xl">Enter the World of Telugu-Toon-World</h2>
+          <h2 className="relative text-3xl font-extrabold sm:text-4xl">
+            Enter the World of Telugu-Toon-World
+          </h2>
           <p className="relative mx-auto mt-3 max-w-xl text-muted-foreground">
-            Choose a plan, pay with UPI, submit your reference number, and your Telegram access unlocks right after admin
-            verification.
+            Choose a plan, pay with UPI, submit your reference number, and your Telegram access
+            unlocks right after admin verification.
           </p>
           <Button asChild variant="gold" size="lg" className="relative mt-8">
             <Link to="/plans">Get Premium Access</Link>

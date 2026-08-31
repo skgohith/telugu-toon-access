@@ -15,7 +15,11 @@ export function dateTime(value?: string | null) {
 
 export function dateOnly(value?: string | null) {
   if (!value) return "—";
-  return new Date(value).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" });
+  return new Date(value).toLocaleDateString("en-IN", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  });
 }
 
 export const STATUS_LABEL: Record<string, string> = {

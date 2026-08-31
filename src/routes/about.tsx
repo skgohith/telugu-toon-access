@@ -10,20 +10,40 @@ export const Route = createFileRoute("/about")({
       { title: "About Us — Telugu-Toon-World" },
       {
         name: "description",
-        content: "Telugu-Toon-World is a private Telegram community bringing curated Telugu cartoon content to fans.",
+        content:
+          "Telugu-Toon-World is a private Telegram community bringing curated Telugu cartoon content to fans.",
       },
       { property: "og:title", content: "About Telugu-Toon-World" },
-      { property: "og:description", content: "Learn about our private Telugu cartoon community and how access works." },
+      {
+        property: "og:description",
+        content: "Learn about our private Telugu cartoon community and how access works.",
+      },
     ],
   }),
   component: AboutPage,
 });
 
 const VALUES = [
-  { icon: Palette, title: "Curated with care", body: "Every collection is organised so you always find something to watch." },
-  { icon: Users, title: "Community first", body: "A friendly private space for Telugu cartoon lovers of all ages." },
-  { icon: ShieldCheck, title: "Verified access", body: "Each membership is manually verified, keeping the channel private." },
-  { icon: HeartHandshake, title: "Real support", body: "We reply to payment and access questions directly." },
+  {
+    icon: Palette,
+    title: "Curated with care",
+    body: "Every collection is organised so you always find something to watch.",
+  },
+  {
+    icon: Users,
+    title: "Community first",
+    body: "A friendly private space for Telugu cartoon lovers of all ages.",
+  },
+  {
+    icon: ShieldCheck,
+    title: "Verified access",
+    body: "Each membership is manually verified, keeping the channel private.",
+  },
+  {
+    icon: HeartHandshake,
+    title: "Real support",
+    body: "We reply to payment and access questions directly.",
+  },
 ];
 
 function AboutPage() {
@@ -38,17 +58,18 @@ function AboutPage() {
 
         <div className="glass mt-12 space-y-4 rounded-4xl p-8 text-sm leading-relaxed text-muted-foreground">
           <p>
-            We started Telugu-Toon-World for one simple reason: fans wanted one dependable place to enjoy Telugu cartoon
-            content with friends and family. Instead of scattered links, we keep everything organised inside a single
-            private Telegram channel.
+            We started Telugu-Toon-World for one simple reason: fans wanted one dependable place to
+            enjoy Telugu cartoon content with friends and family. Instead of scattered links, we
+            keep everything organised inside a single private Telegram channel.
           </p>
           <p>
-            Members choose a premium plan, pay securely through UPI, and submit their payment reference. Once our admin
-            verifies the payment, the private channel invite unlocks on your track-order page — no account needed.
+            Members choose a premium plan, pay securely through UPI, and submit their payment
+            reference. Once our admin verifies the payment, the private channel invite unlocks on
+            your track-order page — no account needed.
           </p>
           <p>
-            We keep the community private on purpose — it protects the experience for paying members and lets us support
-            everyone properly.
+            We keep the community private on purpose — it protects the experience for paying members
+            and lets us support everyone properly.
           </p>
         </div>
 

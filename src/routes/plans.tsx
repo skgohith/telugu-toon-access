@@ -19,7 +19,10 @@ export const Route = createFileRoute("/plans")({
           "Choose Lite Premium or Max Premium to unlock the Telugu-Toon-World private Telegram cartoon channel. Coupon codes supported at checkout.",
       },
       { property: "og:title", content: "Premium Plans — Telugu-Toon-World" },
-      { property: "og:description", content: "Two simple premium plans with UPI payment and coupon support." },
+      {
+        property: "og:description",
+        content: "Two simple premium plans with UPI payment and coupon support.",
+      },
       { property: "og:url", content: "https://telugu-toon-access.lovable.app/plans" },
       { property: "og:type", content: "product" },
     ],
@@ -118,7 +121,10 @@ function PlansPage() {
 
                 <div className="mt-6 flex items-end gap-2">
                   <span className="text-5xl font-extrabold text-gradient">{inr(plan.price)}</span>
-                  <span className="pb-2 text-sm text-muted-foreground">/ {"\u00a0"}{plan.duration_label}</span>
+                  <span className="pb-2 text-sm text-muted-foreground">
+                    / {"\u00a0"}
+                    {plan.duration_label}
+                  </span>
                 </div>
 
                 <ul className="mt-7 space-y-3 text-sm">
@@ -146,7 +152,8 @@ function PlansPage() {
         )}
 
         <div className="glass mt-12 rounded-3xl p-6 text-center text-sm text-muted-foreground">
-          Have a coupon code? Apply it on the checkout page — each coupon works only with its own plan.
+          Have a coupon code? Apply it on the checkout page — each coupon works only with its own
+          plan.
         </div>
       </section>
     </SiteLayout>
