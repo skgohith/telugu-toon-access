@@ -25,8 +25,9 @@ export type InviteEmailOutcome =
   | { status: "skipped"; message: string };
 
 function guestClient() {
-  const url = process.env["SUPABASE_URL"] ?? import.meta.env['VITE_SUPABASE_URL'];
-  const key = process.env["SUPABASE_PUBLISHABLE_KEY"] ?? import.meta.env['VITE_SUPABASE_PUBLISHABLE_KEY'];
+  const url = process.env["SUPABASE_URL"] ?? import.meta.env["VITE_SUPABASE_URL"];
+  const key =
+    process.env["SUPABASE_PUBLISHABLE_KEY"] ?? import.meta.env["VITE_SUPABASE_PUBLISHABLE_KEY"];
   return createClient(url as string, key as string, { auth: { persistSession: false } });
 }
 
@@ -47,10 +48,12 @@ export function friendlyEmailError(error: unknown): string {
 /** Loads the invite-email context for an approved order (order ref + email verified). */
 export async function loadEmailContext(orderRef: string, email: string): Promise<Json> {
   const client = guestClient();
-  const { data, error } = await (client.rpc as never as (
-    fn: string,
-    args: Json,
-  ) => Promise<{ data: unknown; error: { message: string } | null }>)("guest_email_context", {
+  const { data, error } = await (
+    client.rpc as never as (
+      fn: string,
+      args: Json,
+    ) => Promise<{ data: unknown; error: { message: string } | null }>
+  )("guest_email_context", {
     p_order_ref: orderRef,
     p_email: email,
   });
@@ -60,11 +63,14 @@ export async function loadEmailContext(orderRef: string, email: string): Promise
 
 async function recordResult(orderId: string, status: string, message?: string) {
   const client = guestClient();
-  await (client.rpc as never as (fn: string, args: Json) => Promise<unknown>)("record_access_email_result", {
-    p_order_id: orderId,
-    p_status: status,
-    p_error: message ?? null,
-  });
+  await (client.rpc as never as (fn: string, args: Json) => Promise<unknown>)(
+    "record_access_email_result",
+    {
+      p_order_id: orderId,
+      p_status: status,
+      p_error: message ?? null,
+    },
+  );
 }
 
 export function toEmailData(ctx: Json): InviteEmailData {
@@ -78,10 +84,13 @@ export function toEmailData(ctx: Json): InviteEmailData {
 }
 
 /** Renders the invite email to HTML for the admin preview. */
-export async function renderInvitePreview(data: InviteEmailData): Promise<{ subject: string; html: string }> {
+export async function renderInvitePreview(
+  data: InviteEmailData,
+): Promise<{ subject: string; html: string }> {
   const template = TEMPLATES["telegram-access"]!;
   const html = await render(React.createElement(template.component, data as never));
-  const subject = typeof template.subject === "function" ? template.subject(data as never) : template.subject;
+  const subject =
+    typeof template.subject === "function" ? template.subject(data as never) : template.subject;
   return { subject, html };
 }
 
@@ -93,7 +102,8 @@ export async function sendInviteEmail(
   ctx: Json,
   opts: { force?: boolean } = {},
 ): Promise<InviteEmailOutcome> {
-  if (!ctx["ok"]) return { status: "skipped", message: String(ctx["message"] ?? "Order not available.") };
+  if (!ctx["ok"])
+    return { status: "skipped", message: String(ctx["message"] ?? "Order not available.") };
 
   const orderId = String(ctx["order_id"]);
   const email = String(ctx["customer_email"] ?? "");
@@ -127,7 +137,10 @@ export async function sendInviteEmail(
 type AnyClient = {
   from: (t: string) => {
     select: (c: string) => {
-      eq: (col: string, v: unknown) => { maybeSingle: () => Promise<{ data: Json | null; error: { message: string } | null }> };
+      eq: (
+        col: string,
+        v: unknown,
+      ) => { maybeSingle: () => Promise<{ data: Json | null; error: { message: string } | null }> };
     };
   };
 };
@@ -143,9 +156,14 @@ export async function loadEmailContextById(client: AnyClient, orderId: string): 
     .maybeSingle();
   if (error) throw new Error(error.message);
   if (!order) return { ok: false, message: "Order not found." };
-  if (order["payment_status"] !== "completed") return { ok: false, message: "Order is not approved yet." };
+  if (order["payment_status"] !== "completed")
+    return { ok: false, message: "Order is not approved yet." };
 
-  const { data: plan } = await client.from("plans").select("telegram_link").eq("id", order["plan_id"]).maybeSingle();
+  const { data: plan } = await client
+    .from("plans")
+    .select("telegram_link")
+    .eq("id", order["plan_id"])
+    .maybeSingle();
 
   return {
     ok: true,

@@ -79,7 +79,9 @@ export function Navbar({ isAdmin = false }: { isAdmin?: boolean }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel className="truncate text-xs text-muted-foreground">{user.email}</DropdownMenuLabel>
+                <DropdownMenuLabel className="truncate text-xs text-muted-foreground">
+                  {user.email}
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 {isAdmin && (
                   <DropdownMenuItem asChild>

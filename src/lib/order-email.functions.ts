@@ -34,9 +34,11 @@ export const previewAccessEmail = createServerFn({ method: "POST" })
     });
     if (roleError || !isAdmin) throw new Error("Not authorized.");
 
-    const { loadEmailContextById, toEmailData, renderInvitePreview } = await import("./order-email.server");
+    const { loadEmailContextById, toEmailData, renderInvitePreview } =
+      await import("./order-email.server");
     const ctx = await loadEmailContextById(context.supabase as never, data.orderId);
-    if (!ctx["ok"]) return { ok: false as const, message: String(ctx["message"] ?? "Not available.") };
+    if (!ctx["ok"])
+      return { ok: false as const, message: String(ctx["message"] ?? "Not available.") };
     const rendered = await renderInvitePreview(toEmailData(ctx));
     return { ok: true as const, to: String(ctx["customer_email"] ?? ""), ...rendered };
   });
@@ -47,9 +49,7 @@ export const previewAccessEmail = createServerFn({ method: "POST" })
  */
 export const resendAccessEmail = createServerFn({ method: "POST" })
   .inputValidator((data) =>
-    z
-      .object({ orderRef: z.string().min(3).max(64), email: z.string().email() })
-      .parse(data),
+    z.object({ orderRef: z.string().min(3).max(64), email: z.string().email() }).parse(data),
   )
   .handler(async ({ data }) => {
     const { loadEmailContext, sendInviteEmail } = await import("./order-email.server");

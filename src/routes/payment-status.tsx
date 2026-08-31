@@ -1,21 +1,36 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
-import { CheckCircle2, Clock, Loader2, Mail, MailX, PartyPopper, RefreshCw, Search, Send, XCircle } from "lucide-react";
+import {
+  CheckCircle2,
+  Clock,
+  Loader2,
+  Mail,
+  MailX,
+  PartyPopper,
+  RefreshCw,
+  Search,
+  Send,
+  XCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { z } from "zod";
 
 import { SiteLayout } from "@/components/site/SiteLayout";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { dateTime, inr } from "@/lib/format";
 import { UTR_HINT, UTR_LENGTH, normalizeUtr, validateUtr } from "@/lib/utr";
 import { getTelegramAccess, submitUtr, trackOrder } from "@/lib/store.api";
 import { resendAccessEmail } from "@/lib/order-email.functions";
-
-
 
 const searchSchema = z.object({
   ref: z.string().optional(),
@@ -27,9 +42,15 @@ export const Route = createFileRoute("/payment-status")({
   head: () => ({
     meta: [
       { title: "Track Order — Telugu-Toon-World" },
-      { name: "description", content: "Submit your UPI payment reference and track verification of your order." },
+      {
+        name: "description",
+        content: "Submit your UPI payment reference and track verification of your order.",
+      },
       { property: "og:title", content: "Track Order — Telugu-Toon-World" },
-      { property: "og:description", content: "Track your Telugu-Toon-World order verification status." },
+      {
+        property: "og:description",
+        content: "Track your Telugu-Toon-World order verification status.",
+      },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
     ],
@@ -51,7 +72,6 @@ function PaymentStatusPage() {
   const [thanksOpen, setThanksOpen] = useState(false);
   const previousStatus = useRef<string | null>(null);
   const waitDismissed = useRef(false);
-
 
   const enabled = Boolean(ref && email);
   const queryKey = ["track-order", ref, email];
@@ -89,7 +109,6 @@ function PaymentStatusPage() {
     return () => window.removeEventListener("beforeunload", warn);
   }, [waitOpen]);
 
-
   const utrMutation = useMutation({
     mutationFn: () => submitUtr({ data: { orderRef: ref!, email: email!, utr, proofPath: null } }),
     onSuccess: () => {
@@ -112,24 +131,28 @@ function PaymentStatusPage() {
       setLink(result.link);
       window.open(result.link, "_blank", "noopener,noreferrer");
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not fetch the invite link"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not fetch the invite link"),
   });
 
   const resendMutation = useMutation({
     mutationFn: () => resendAccessEmail({ data: { orderRef: ref!, email: email! } }),
     onSuccess: (result) => {
-      if (result.status === "sent") toast.success("Invite email sent — check your inbox and spam folder.");
+      if (result.status === "sent")
+        toast.success("Invite email sent — check your inbox and spam folder.");
       else if (result.status === "suppressed")
-        toast.error("Your email provider is blocking our messages. Use the Telegram button above instead.");
+        toast.error(
+          "Your email provider is blocking our messages. Use the Telegram button above instead.",
+        );
       else toast.error(result.message ?? "Could not send the email. Please contact support.");
       queryClient.invalidateQueries({ queryKey });
     },
-    onError: (error) => toast.error(error instanceof Error ? error.message : "Could not send the email"),
+    onError: (error) =>
+      toast.error(error instanceof Error ? error.message : "Could not send the email"),
   });
 
   const utrLocked = utrMutation.isPending || justSubmitted;
   const utrCheck = validateUtr(utr);
-
 
   function doLookup(event: React.FormEvent) {
     event.preventDefault();
@@ -150,10 +173,14 @@ function PaymentStatusPage() {
           Track your <span className="text-gradient">order</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          No account needed — use your order reference (TTW-…) and the email you entered at checkout.
+          No account needed — use your order reference (TTW-…) and the email you entered at
+          checkout.
         </p>
 
-        <form onSubmit={doLookup} className="glass mt-8 grid gap-4 rounded-4xl p-6 sm:grid-cols-[1fr_1fr_auto]">
+        <form
+          onSubmit={doLookup}
+          className="glass mt-8 grid gap-4 rounded-4xl p-6 sm:grid-cols-[1fr_1fr_auto]"
+        >
           <div className="space-y-2">
             <Label htmlFor="ref">Order reference</Label>
             <Input
@@ -202,7 +229,9 @@ function PaymentStatusPage() {
           <div className="glass mt-8 rounded-4xl p-8">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
-                <p className="text-xs uppercase tracking-widest text-muted-foreground">Order reference</p>
+                <p className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Order reference
+                </p>
                 <h2 className="font-display text-2xl font-extrabold">{order.order_ref}</h2>
               </div>
               <StatusPill status={order.payment_status} />
@@ -224,7 +253,9 @@ function PaymentStatusPage() {
                   <Clock className="mt-0.5 size-5 shrink-0 text-highlight" />
                   <div>
                     <h3 className="font-display text-lg font-bold text-highlight">
-                      {order.utr ? "Payment pending verification" : "Waiting for your payment reference"}
+                      {order.utr
+                        ? "Payment pending verification"
+                        : "Waiting for your payment reference"}
                     </h3>
                     <p className="mt-1 text-sm text-muted-foreground">
                       {order.utr
@@ -237,9 +268,18 @@ function PaymentStatusPage() {
                 <div className="rounded-2xl bg-card/70 p-5">
                   <p className="text-sm font-bold">What happens next</p>
                   <ol className="mt-3 space-y-2 text-sm text-muted-foreground">
-                    <li>1. The admin matches your UTR with the received UPI payment (usually within a few hours).</li>
-                    <li>2. This page updates on its own — keep your reference {order.order_ref} safe and revisit anytime.</li>
-                    <li>3. Once approved, a “Join Telegram channel” button appears here with your private invite.</li>
+                    <li>
+                      1. The admin matches your UTR with the received UPI payment (usually within a
+                      few hours).
+                    </li>
+                    <li>
+                      2. This page updates on its own — keep your reference {order.order_ref} safe
+                      and revisit anytime.
+                    </li>
+                    <li>
+                      3. Once approved, a “Join Telegram channel” button appears here with your
+                      private invite.
+                    </li>
                     <li>4. If something looks wrong, contact support with your order reference.</li>
                   </ol>
                   <div className="mt-4 flex flex-wrap gap-3">
@@ -253,7 +293,8 @@ function PaymentStatusPage() {
                       onClick={() => queryClient.invalidateQueries({ queryKey })}
                       disabled={isFetching}
                     >
-                      {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />} Refresh status
+                      {isFetching ? <Loader2 className="animate-spin" /> : <RefreshCw />} Refresh
+                      status
                     </Button>
                   </div>
                 </div>
@@ -268,7 +309,9 @@ function PaymentStatusPage() {
                       return;
                     }
                     if (utrCheck.utr === (order.utr ?? "").toUpperCase()) {
-                      toast.error("This UTR is already submitted for this order and is awaiting admin review.");
+                      toast.error(
+                        "This UTR is already submitted for this order and is awaiting admin review.",
+                      );
                       return;
                     }
                     if (attemptedUtrs.includes(utrCheck.utr)) {
@@ -280,7 +323,9 @@ function PaymentStatusPage() {
                   }}
                 >
                   <div className="space-y-2">
-                    <Label htmlFor="utr">{order.utr ? "Correct your UTR (optional)" : "UTR / transaction reference"}</Label>
+                    <Label htmlFor="utr">
+                      {order.utr ? "Correct your UTR (optional)" : "UTR / transaction reference"}
+                    </Label>
                     <Input
                       id="utr"
                       value={utr}
@@ -316,23 +361,30 @@ function PaymentStatusPage() {
               </div>
             )}
 
-
             {order.payment_status === "completed" && (
               <div className="mt-8 rounded-3xl bg-success/10 p-6 text-center">
                 <h3 className="font-display text-lg font-bold text-success">Payment verified!</h3>
-                <p className="mt-1 text-sm text-muted-foreground">Your private Telegram invite is ready.</p>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Your private Telegram invite is ready.
+                </p>
                 <Button
                   variant="hero"
                   className="mt-5"
                   onClick={() => linkMutation.mutate()}
                   disabled={linkMutation.isPending}
                 >
-                  {linkMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle2 />} Join Telegram channel
+                  {linkMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle2 />}{" "}
+                  Join Telegram channel
                 </Button>
                 {link && (
                   <p className="mt-3 break-all text-xs text-muted-foreground">
                     Invite link:{" "}
-                    <a href={link} target="_blank" rel="noopener noreferrer" className="text-highlight hover:underline">
+                    <a
+                      href={link}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-highlight hover:underline"
+                    >
                       {link}
                     </a>
                   </p>
@@ -350,9 +402,12 @@ function PaymentStatusPage() {
 
             {order.payment_status === "rejected" && (
               <div className="mt-8 rounded-3xl bg-destructive/10 p-6 text-center">
-                <h3 className="font-display text-lg font-bold text-destructive">Payment could not be verified</h3>
+                <h3 className="font-display text-lg font-bold text-destructive">
+                  Payment could not be verified
+                </h3>
                 <p className="mt-1 text-sm text-muted-foreground">
-                  The admin could not match your reference. Please contact support or place a new order.
+                  The admin could not match your reference. Please contact support or place a new
+                  order.
                 </p>
                 <div className="mt-5 flex flex-wrap justify-center gap-3">
                   <Button asChild variant="glass">
@@ -383,13 +438,14 @@ function PaymentStatusPage() {
               <Loader2 className="size-5 animate-spin" /> Please don’t leave this page
             </DialogTitle>
             <DialogDescription>
-              Your payment reference {order?.utr ? `(${order.utr})` : ""} has been sent to the admin. Do not refresh or
-              close this page — we’re waiting for the confirmation and this page updates automatically.
+              Your payment reference {order?.utr ? `(${order.utr})` : ""} has been sent to the
+              admin. Do not refresh or close this page — we’re waiting for the confirmation and this
+              page updates automatically.
             </DialogDescription>
           </DialogHeader>
           <p className="text-xs text-muted-foreground">
-            Order {order?.order_ref}. Verification is usually done within a few hours — you can safely return later with
-            your reference if it takes longer.
+            Order {order?.order_ref}. Verification is usually done within a few hours — you can
+            safely return later with your reference if it takes longer.
           </p>
           <Button
             type="button"
@@ -409,18 +465,22 @@ function PaymentStatusPage() {
               <PartyPopper className="size-5" /> Thanks for purchasing!
             </DialogTitle>
             <DialogDescription>
-              Your payment is verified{order ? ` for ${order.plan_name}` : ""}. Your private Telegram invite is ready —
-              welcome to Telugu-Toon-World.
+              Your payment is verified{order ? ` for ${order.plan_name}` : ""}. Your private
+              Telegram invite is ready — welcome to Telugu-Toon-World.
             </DialogDescription>
           </DialogHeader>
-          <Button variant="hero" onClick={() => linkMutation.mutate()} disabled={linkMutation.isPending}>
-            {linkMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle2 />} Join Telegram channel
+          <Button
+            variant="hero"
+            onClick={() => linkMutation.mutate()}
+            disabled={linkMutation.isPending}
+          >
+            {linkMutation.isPending ? <Loader2 className="animate-spin" /> : <CheckCircle2 />} Join
+            Telegram channel
           </Button>
         </DialogContent>
       </Dialog>
     </SiteLayout>
   );
-
 }
 
 function Row({ label, value }: { label: string; value: string }) {
@@ -434,13 +494,19 @@ function Row({ label, value }: { label: string; value: string }) {
 
 function StatusPill({ status }: { status: "pending" | "completed" | "rejected" }) {
   const map = {
-    pending: { label: "Awaiting verification", className: "bg-highlight/15 text-highlight", Icon: Clock },
+    pending: {
+      label: "Awaiting verification",
+      className: "bg-highlight/15 text-highlight",
+      Icon: Clock,
+    },
     completed: { label: "Verified", className: "bg-success/15 text-success", Icon: CheckCircle2 },
     rejected: { label: "Rejected", className: "bg-destructive/15 text-destructive", Icon: XCircle },
   } as const;
   const { label, className, Icon } = map[status];
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${className}`}>
+    <span
+      className={`inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-bold ${className}`}
+    >
       <Icon className="size-4" /> {label}
     </span>
   );
@@ -479,7 +545,13 @@ function Timeline({ order }: { order: TimelineOrder }) {
           : utrDone
             ? "Admin is verifying your payment"
             : "Starts once your reference is submitted",
-      state: approved ? ("done" as const) : rejected ? ("failed" as const) : utrDone ? ("current" as const) : ("todo" as const),
+      state: approved
+        ? ("done" as const)
+        : rejected
+          ? ("failed" as const)
+          : utrDone
+            ? ("current" as const)
+            : ("todo" as const),
     },
   ];
 
@@ -514,7 +586,11 @@ function Timeline({ order }: { order: TimelineOrder }) {
             <div className="pt-1">
               <p
                 className={`text-sm font-bold ${
-                  step.state === "todo" ? "text-muted-foreground" : step.state === "failed" ? "text-destructive" : ""
+                  step.state === "todo"
+                    ? "text-muted-foreground"
+                    : step.state === "failed"
+                      ? "text-destructive"
+                      : ""
                 }`}
               >
                 {step.label}
@@ -544,16 +620,34 @@ function EmailStatus({
   pending: boolean;
   onResend: () => void;
 }) {
-  const map: Record<EmailStatusValue, { label: string; hint: string; tone: string; Icon: typeof Mail }> = {
+  const map: Record<
+    EmailStatusValue,
+    { label: string; hint: string; tone: string; Icon: typeof Mail }
+  > = {
     sent: {
       label: "Invite email sent",
       hint: sentAt ? `Delivered to ${email} on ${dateTime(sentAt)}` : `Sent to ${email}`,
       tone: "text-success",
       Icon: Mail,
     },
-    sending: { label: "Sending invite email…", hint: `Preparing your email to ${email}`, tone: "text-highlight", Icon: Loader2 },
-    not_sent: { label: "Invite email not sent yet", hint: `We will email ${email} shortly`, tone: "text-muted-foreground", Icon: Mail },
-    failed: { label: "Invite email failed", hint: `We could not deliver the email to ${email}`, tone: "text-destructive", Icon: MailX },
+    sending: {
+      label: "Sending invite email…",
+      hint: `Preparing your email to ${email}`,
+      tone: "text-highlight",
+      Icon: Loader2,
+    },
+    not_sent: {
+      label: "Invite email not sent yet",
+      hint: `We will email ${email} shortly`,
+      tone: "text-muted-foreground",
+      Icon: Mail,
+    },
+    failed: {
+      label: "Invite email failed",
+      hint: `We could not deliver the email to ${email}`,
+      tone: "text-destructive",
+      Icon: MailX,
+    },
     suppressed: {
       label: "Invite email blocked",
       hint: `${email} is not accepting our emails — use the Telegram button above`,
@@ -568,7 +662,9 @@ function EmailStatus({
     <div className="mt-6 rounded-2xl border border-border/60 bg-card/60 p-4 text-left">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex items-center gap-3">
-          <view.Icon className={`size-5 ${view.tone} ${status === "sending" ? "animate-spin" : ""}`} />
+          <view.Icon
+            className={`size-5 ${view.tone} ${status === "sending" ? "animate-spin" : ""}`}
+          />
           <div>
             <p className={`text-sm font-semibold ${view.tone}`}>{view.label}</p>
             <p className="text-xs text-muted-foreground">{view.hint}</p>

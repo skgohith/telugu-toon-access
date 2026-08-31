@@ -59,7 +59,10 @@ export type CouponResult =
       finalAmount: number;
     };
 
-type Rpc = (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+type Rpc = (
+  fn: string,
+  args?: Record<string, unknown>,
+) => Promise<{ data: unknown; error: { message: string } | null }>;
 const rpc = supabase.rpc.bind(supabase) as unknown as Rpc;
 
 function unwrap<T>(data: unknown, error: { message: string } | null): T {
@@ -70,14 +73,20 @@ function unwrap<T>(data: unknown, error: { message: string } | null): T {
 export async function listPlans(): Promise<PublicPlan[]> {
   const { data, error } = await supabase
     .from("plans")
-    .select("id, name, price, duration_days, duration_label, description, features, recommended, active, sort_order")
+    .select(
+      "id, name, price, duration_days, duration_label, description, features, recommended, active, sort_order",
+    )
     .eq("active", true)
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as PublicPlan[];
 }
 
-export async function getPaymentDetails(): Promise<{ upiId: string; payeeName: string; qrUrl: string }> {
+export async function getPaymentDetails(): Promise<{
+  upiId: string;
+  payeeName: string;
+  qrUrl: string;
+}> {
   const fallback = { upiId: "9848779490@fam", payeeName: "BOLLOJI HEMANTH", qrUrl: "" };
   const { data, error } = await rpc("get_payment_settings");
   if (error || !data) return fallback;
@@ -89,8 +98,9 @@ export async function getPaymentDetails(): Promise<{ upiId: string; payeeName: s
   };
 }
 
-
-export async function validateCoupon(input: { data: { planId: string; code: string } }): Promise<CouponResult> {
+export async function validateCoupon(input: {
+  data: { planId: string; code: string };
+}): Promise<CouponResult> {
   const { data, error } = await rpc("guest_validate_coupon", {
     p_plan_id: input.data.planId,
     p_code: input.data.code,
@@ -137,8 +147,9 @@ export async function createPaidOrder(input: {
   return unwrap<OrderRow>(data, error);
 }
 
-
-export async function trackOrder(input: { data: { orderRef: string; email: string } }): Promise<OrderRow | null> {
+export async function trackOrder(input: {
+  data: { orderRef: string; email: string };
+}): Promise<OrderRow | null> {
   const { data, error } = await rpc("guest_track_order", {
     p_order_ref: input.data.orderRef,
     p_email: input.data.email,
@@ -178,7 +189,11 @@ export async function myProfile(): Promise<{
   if (!user) return { profile: null, isAdmin: false };
 
   const [{ data: profile }, { data: roles }] = await Promise.all([
-    supabase.from("profiles").select("id, name, email, phone, created_at").eq("id", user.id).maybeSingle(),
+    supabase
+      .from("profiles")
+      .select("id, name, email, phone, created_at")
+      .eq("id", user.id)
+      .maybeSingle(),
     supabase.from("user_roles").select("role").eq("user_id", user.id),
   ]);
 

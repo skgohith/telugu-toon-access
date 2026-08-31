@@ -126,11 +126,8 @@
   --sidebar-border: oklch(0.99 0 0 / 10%);
   --sidebar-ring: oklch(0.68 0.19 295);
 
-  --gradient-hero: radial-gradient(
-      1100px 620px at 12% -10%,
-      oklch(0.45 0.2 295 / 0.55),
-      transparent 60%
-    ),
+  --gradient-hero:
+    radial-gradient(1100px 620px at 12% -10%, oklch(0.45 0.2 295 / 0.55), transparent 60%),
     radial-gradient(900px 560px at 92% 4%, oklch(0.5 0.17 232 / 0.45), transparent 62%),
     radial-gradient(700px 480px at 55% 110%, oklch(0.72 0.16 70 / 0.22), transparent 65%);
   --gradient-brand: linear-gradient(

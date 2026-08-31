@@ -20,7 +20,10 @@ export const Route = createFileRoute("/auth")({
   head: () => ({
     meta: [
       { title: "Admin Sign In — Telugu-Toon-World" },
-      { name: "description", content: "Administrator sign in for the Telugu-Toon-World store control panel." },
+      {
+        name: "description",
+        content: "Administrator sign in for the Telugu-Toon-World store control panel.",
+      },
       { property: "og:title", content: "Admin Sign In — Telugu-Toon-World" },
       { property: "og:description", content: "Restricted access — store administrators only." },
       { property: "og:type", content: "website" },
@@ -85,7 +88,8 @@ function AuthPage() {
             Admin <span className="text-gradient">sign in</span>
           </h1>
           <p className="mt-2 text-center text-sm text-muted-foreground">
-            Store administrators only. Customers don&apos;t need an account — just order and track it with your reference.
+            Store administrators only. Customers don&apos;t need an account — just order and track
+            it with your reference.
           </p>
 
           <form onSubmit={submit} className="mt-8 space-y-4">

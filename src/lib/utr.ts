@@ -11,7 +11,9 @@ export function normalizeUtr(value: string): string {
   return value.replace(/[^0-9]/g, "").slice(0, UTR_LENGTH);
 }
 
-export function validateUtr(value: string): { ok: true; utr: string } | { ok: false; message: string } {
+export function validateUtr(
+  value: string,
+): { ok: true; utr: string } | { ok: false; message: string } {
   const utr = normalizeUtr(value.trim());
   if (utr.length === 0) return { ok: false, message: "Enter the 12-digit UTR from your UPI app" };
   if (utr.length !== UTR_LENGTH) {

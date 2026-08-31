@@ -64,7 +64,10 @@ export type AdminPlan = {
 const ADMIN_ORDER_COLUMNS =
   "id, order_ref, user_id, plan_name, coupon_code, customer_name, customer_email, customer_phone, instagram_username, telegram_username, original_amount, discount_amount, final_amount, utr, proof_path, payment_status, telegram_access, approved_at, rejected_at, created_at, access_email_status, access_email_error, access_email_attempts, access_email_sent_at";
 
-type Rpc = (fn: string, args?: Record<string, unknown>) => Promise<{ data: unknown; error: { message: string } | null }>;
+type Rpc = (
+  fn: string,
+  args?: Record<string, unknown>,
+) => Promise<{ data: unknown; error: { message: string } | null }>;
 const rpc = supabase.rpc.bind(supabase) as unknown as Rpc;
 
 export async function adminOverview() {
@@ -92,7 +95,8 @@ export async function adminOverview() {
   }
 
   const planCounts = new Map<string, number>();
-  for (const order of list) planCounts.set(order.plan_name, (planCounts.get(order.plan_name) ?? 0) + 1);
+  for (const order of list)
+    planCounts.set(order.plan_name, (planCounts.get(order.plan_name) ?? 0) + 1);
 
   return {
     totals: {
@@ -117,7 +121,10 @@ export async function adminOverview() {
 export async function adminOrders(input: {
   data: { status: "all" | "pending" | "completed" | "rejected"; search?: string };
 }): Promise<AdminOrder[]> {
-  let query = supabase.from("orders").select(ADMIN_ORDER_COLUMNS).order("created_at", { ascending: false });
+  let query = supabase
+    .from("orders")
+    .select(ADMIN_ORDER_COLUMNS)
+    .order("created_at", { ascending: false });
   if (input.data.status !== "all") query = query.eq("payment_status", input.data.status);
 
   const { data, error } = await query;
@@ -148,7 +155,9 @@ export async function adminSetOrderStatus(input: {
 export async function adminCoupons(): Promise<AdminCoupon[]> {
   const { data, error } = await supabase
     .from("coupons")
-    .select("id, code, plan_id, discount_type, discount_value, max_uses, used_count, expires_at, active, created_at")
+    .select(
+      "id, code, plan_id, discount_type, discount_value, max_uses, used_count, expires_at, active, created_at",
+    )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as AdminCoupon[];
@@ -201,7 +210,9 @@ export async function adminDeleteCoupon(input: { data: { id: string } }) {
 export async function adminPlans(): Promise<AdminPlan[]> {
   const { data, error } = await supabase
     .from("plans")
-    .select("id, name, price, duration_days, duration_label, description, features, active, recommended, sort_order, telegram_link")
+    .select(
+      "id, name, price, duration_days, duration_label, description, features, active, recommended, sort_order, telegram_link",
+    )
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
   return (data ?? []) as unknown as AdminPlan[];
@@ -220,7 +231,6 @@ export async function adminUpdatePlanPrice(input: { data: { id: string; price: n
   if (error) throw new Error(error.message);
   return { ok: true as const };
 }
-
 
 /** Full plan editor — updates every customer-visible field of a plan. */
 export async function adminSavePlan(input: {
@@ -247,8 +257,10 @@ export async function adminSavePlan(input: {
   if (name.length < 2) throw new Error("Enter a plan name.");
   if (!Number.isFinite(price) || price <= 0) throw new Error("Enter a price greater than zero.");
   if (price > 1_000_000) throw new Error("That price looks too high.");
-  if (!Number.isFinite(durationDays) || durationDays < 1) throw new Error("Duration must be at least 1 day.");
-  if (link && !/^https?:\/\//i.test(link)) throw new Error("The Telegram link must start with https://");
+  if (!Number.isFinite(durationDays) || durationDays < 1)
+    throw new Error("Duration must be at least 1 day.");
+  if (link && !/^https?:\/\//i.test(link))
+    throw new Error("The Telegram link must start with https://");
 
   const { error } = await supabase
     .from("plans")
@@ -270,7 +282,10 @@ export async function adminSavePlan(input: {
 }
 
 export async function adminClearData(input: {
-  data: { scope: "pending" | "completed" | "rejected" | "coupons" | "customers" | "all"; confirmText: "DELETE" };
+  data: {
+    scope: "pending" | "completed" | "rejected" | "coupons" | "customers" | "all";
+    confirmText: "DELETE";
+  };
 }) {
   const { data, error } = await rpc("admin_clear_data", {
     p_scope: input.data.scope,
@@ -288,17 +303,23 @@ export async function adminProofUrl(input: { data: { orderId: string } }) {
     .eq("id", input.data.orderId)
     .maybeSingle();
   if (error) return { ok: false as const, message: error.message };
-  if (!order?.proof_path) return { ok: false as const, message: "No payment proof uploaded for this order." };
+  if (!order?.proof_path)
+    return { ok: false as const, message: "No payment proof uploaded for this order." };
 
   const { data: signed, error: signError } = await supabase.storage
     .from("payment-proofs")
     .createSignedUrl(order.proof_path, 300);
-  if (signError || !signed) return { ok: false as const, message: signError?.message ?? "Could not open the proof." };
+  if (signError || !signed)
+    return { ok: false as const, message: signError?.message ?? "Could not open the proof." };
   return { ok: true as const, url: signed.signedUrl };
 }
 
 /** Payment details shown on checkout (UPI ID, payee name, QR image link). */
-export async function adminPaymentSettings(): Promise<{ upiId: string; payeeName: string; qrUrl: string }> {
+export async function adminPaymentSettings(): Promise<{
+  upiId: string;
+  payeeName: string;
+  qrUrl: string;
+}> {
   const { data, error } = await rpc("get_payment_settings");
   if (error) throw new Error(error.message);
   const d = (data ?? {}) as { upiId?: string; payeeName?: string; qrUrl?: string };
